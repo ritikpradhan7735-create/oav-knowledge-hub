@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ritik K Chess</title>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div id="game-over-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h2>🎉 Game Over</h2>
+        <p id="winner-text">Player 1 Won!</p>
+        <button class="btn btn-primary" onclick="closeModal()">Close</button>
+    </div>
+</div>
+
+<div id="header">
+    <div class="logo-group">
+        <div class="header-left"></div> 
+        <h2>♟️ Ritik K Chess</h2>
+        <div class="header-right">
+            <button class="btn btn-primary btn-sm" onclick="adminLogin()">Admin</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div id="lobbyView">
+        <h3>Available Matches</h3>
+        <div id="matches-list">Loading matches...</div>
+    </div>
+
+    <div id="gameView" class="board-container" style="display: none;">
+        <div class="board-left">
+            <div id="status">Select or host a match to play</div>
+            <div id="board"></div>
+        </div>
+        
+        <div class="sidebar-right">
+            <div class="controls">
+                <button class="btn btn-secondary" id="undoBtn" onclick="requestUndo()">Undo</button>
+                <button class="btn btn-warning" id="resetBtn" onclick="requestReset()">Reset</button>
+                <button class="btn btn-danger" id="exitBtn" onclick="exitToLobby()">Leave Match</button>
+            </div>
+
+            <div class="chat-container">
+                <div id="chat-messages"></div>
+                <form id="chat-form" onsubmit="sendChatMessage(event)">
+                    <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off">
+                    <button type="submit" class="btn btn-primary">Send</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const socket = io();
+
+let board = null;
+let game = new Chess();
+let currentMatch = null;
+let myColor = null;
+let myName = "";
+let whitePlayerName = "";
+let blackPlayerName = "";
+let modalShown = false;
+
+socket.on('init-data', matches => {
+    renderMatches(matches);
+});
+
+socket.on('match-state', data => {
+    if (data.matchId !== currentMatch) return;
+    game.load(data.fen);
+    if (board) {
+        board.position(data.fen);
+        if (myColor === 'b') board.orientation('black');
+        else board.orientation('white');
+    }
+    updateStatus();
+});
+
+socket.on('move', data => {
+    if (data.matchId !== currentMatch) return;
+    game.move({
+        from: data.move.from,
+        to: data.move.to,
+        promotion: data.move.promotion
+    });
+    if (board) board.position(game.fen());
+    updateStatus();
+});
+
+socket.on('undo', data => {
+    if (data.matchId !== currentMatch) return;
+    game.load(data.fen);
+    if (board) board.position(game.fen());
+    closeModal();
+    updateStatus();
+});
+
+socket.on('reset', data => {
+    if (data.matchId !== currentMatch) return;
+    game.reset();
+    if (board) board.position('start');
+    closeModal();
+    updateStatus();
+});
+
+socket.on('chat-message', data => {
+    if (data.matchId !== currentMatch) return;
+    appendChatMessage(data.sender, data.text);
+});
+
+function renderMatches(matches) {
+    const listEl = document.getElementById("matches-list");
+    if (!matches || !matches.length) {
+        listEl.innerHTML = '<p style="color:#94a3b8; font-size:14px; padding: 10px;">No active matches found.</p>';
+        return;
+    }
+
+    listEl.innerHTML = matches.map(m => `
+        <div class="match">
+            <div><strong>White:</strong> ${m.p1}</div>
+            <div><strong>Black:</strong> ${m.p2}</div>
+            <button onclick="joinMatch('${m.id}','${m.p1}','${m.p2}')">Join Game</button>
+        </div>
+    `).join('');
+}
+
+function initBoard() {
+    if (board) {
+        board.resize();
+        return;
+    }
+
+    board = Chessboard('board', {
+        draggable: true,
+        position: 'start',
+        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+        onDrop: function(source, target) {
+            if (!currentMatch) return 'snapback';
+            if (game.turn() !== myColor) return 'snapback';
+
+            const move = game.move({
+                from: source,
+                to: target,
+                promotion: 'q'
+            });
+
+            if (!move) return 'snapback';
+
+            board.position(game.fen());
+            socket.emit('move', {
+                matchId: currentMatch,
+                move: move,
+                fen: game.fen()
+            });
+            updateStatus();
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (board) board.resize();
+    });
+}
+
+function joinMatch(id, p1, p2) {
+    let choice = prompt(`Join as White (${p1}) or Black (${p2})?\nType "${p1}" or "${p2}":`);
+
+    if (choice === p1) {
+        myColor = 'w';
+        myName = p1;
+    } else if (choice === p2) {
+        myColor = 'b';
+        myName = p2;
+    } else return alert("Invalid selection!");
+
+    whitePlayerName = p1;
+    blackPlayerName = p2;
+    currentMatch = id;
+    modalShown = false;
+
+    socket.emit('join-match', id);
+
+    game.reset();
+    closeModal();
+    document.getElementById("chat-messages").innerHTML = "";
+    document.getElementById("lobbyView").style.display = "none";
+    document.getElementById("gameView").style.display = "flex";
+
+    setTimeout(() => {
+        initBoard();
+        if (myColor === 'b') board.orientation('black');
+        else board.orientation('white');
+        board.position(game.fen());
+        board.resize();
+    }, 50);
+
+    updateStatus();
+}
+
+function showGameOverModal(text) {
+    document.getElementById("winner-text").innerText = text;
+    document.getElementById("game-over-modal").style.display = "flex";
+}
+
+function closeModal() {
+    document.getElementById("game-over-modal").style.display = "none";
+    modalShown = false;
+}
+
+function requestUndo() {
+    if (!currentMatch) return;
+    socket.emit('undo', { matchId: currentMatch });
+}
+
+function requestReset() {
+    if (!currentMatch) return;
+    if (confirm("Are you sure you want to reset the board?")) {
+        socket.emit('reset', { matchId: currentMatch });
+    }
+}
+
+function sendChatMessage(event) {
+    event.preventDefault();
+    const inputEl = document.getElementById("chat-input");
+    const text = inputEl.value.trim();
+
+    if (!text || !currentMatch) return;
+
+    socket.emit('chat-message', {
+        matchId: currentMatch,
+        sender: myName,
+        text: text
+    });
+
+    inputEl.value = "";
+}
+
+function appendChatMessage(sender, text) {
+    const chatContainer = document.getElementById("chat-messages");
+    const msgEl = document.createElement("div");
+    msgEl.className = "chat-msg";
+    msgEl.innerHTML = `<strong>${sender}:</strong> ${text}`;
+    chatContainer.appendChild(msgEl);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+function exitToLobby() {
+    if (currentMatch) {
+        socket.emit('leave-match', currentMatch);
+    }
+    
+    currentMatch = null;
+    myColor = null;
+    myName = "";
+    closeModal();
+
+    game.reset();
+
+    document.getElementById("gameView").style.display = "none";
+    document.getElementById("lobbyView").style.display = "block";
+    document.getElementById("status").innerText = "Select or host a match to play";
+}
+
+function adminLogin() {
+    let pass = prompt("Enter Admin Password:");
+
+    if (pass === "admin123") {
+        let action = prompt("Admin Menu:\nType '1' to Host Match\nType '2' to Cancel", "1");
+        
+        if (action === "1") {
+            let p1 = prompt("Player 1 Name (White):");
+            let p2 = prompt("Player 2 Name (Black):");
+            if (!p1 || !p2) return;
+
+            socket.emit('create-match', {
+                id: "match_" + Date.now(),
+                p1,
+                p2
+            });
+        }
+    } else {
+        alert("Incorrect password!");
+    }
+}
+
+function updateStatus() {
+    if (!currentMatch) return;
+
+    let status = "";
+    if (game.in_checkmate()) {
+        // If White is in checkmate, Black won. If Black is in checkmate, White won.
+        const winner = game.turn() === 'w' ? blackPlayerName : whitePlayerName;
+        status = `Game Over: Checkmate! 🎉`;
+        
+        if (!modalShown) {
+            showGameOverModal(`${winner} Won!`);
+            modalShown = true;
+        }
+    } else if (game.in_draw()) {
+        status = "Game Over: Draw 🤝";
+        if (!modalShown) {
+            showGameOverModal("Game Over: Draw!");
+            modalShown = true;
+        }
+    } else if (game.in_check()) {
+        status = `Check! ⚠️ (${game.turn() === 'w' ? 'White' : 'Black'}'s turn)`;
+    } else {
+        const turnText = game.turn() === 'w' ? "White" : "Black";
+        const isMyTurn = game.turn() === myColor ? " (Your Turn)" : " (Opponent's Turn)";
+        status = `${turnText}'s Turn${isMyTurn}`;
+    }
+    document.getElementById("status").innerText = status;
+}
+</script>
+</body>
+</html>
