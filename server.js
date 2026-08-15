@@ -5,6 +5,7 @@ const path = require('path');
 const { Chess } = require('chess.js');
 const multer = require('multer');
 const fs = require('fs');
+try { require('dotenv').config(); } catch (e) {}
 
 const app = express();
 const server = http.createServer(app);
@@ -51,6 +52,12 @@ function saveNotes(notes) {
 
 let notesDatabase = loadNotes();
 
+function getAdminCredentials() {
+    const ADMIN_USER = String(process.env.ADMIN_USER || process.env.ADMIN_USERNAME || '').trim();
+    const ADMIN_PASS = String(process.env.ADMIN_PASS || process.env.ADMIN_PASSWORD || '').trim();
+    return { ADMIN_USER, ADMIN_PASS };
+}
+
 // API: Fetch Notes
 app.get('/api/notes', (req, res) => {
     res.json({ success: true, notes: notesDatabase });
@@ -59,9 +66,11 @@ app.get('/api/notes', (req, res) => {
 // API: Admin Upload Note
 app.post('/api/upload-note', upload.single('pdf'), (req, res) => {
     const { username, password, classNum, subject, title } = req.body;
-    
-    const ADMIN_USER = process.env.ADMIN_USER || "admin";
-    const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
+    const { ADMIN_USER, ADMIN_PASS } = getAdminCredentials();
+
+    if (!ADMIN_USER || !ADMIN_PASS) {
+        return res.status(500).json({ success: false, message: "Server admin credentials are not configured. Set ADMIN_USER and ADMIN_PASS in Render." });
+    }
 
     if (username !== ADMIN_USER || password !== ADMIN_PASS) {
         return res.status(401).json({ success: false, message: "Invalid Admin Credentials!" });
@@ -89,9 +98,11 @@ app.post('/api/upload-note', upload.single('pdf'), (req, res) => {
 app.delete('/api/delete-note/:id', (req, res) => {
     const { username, password } = req.body;
     const noteId = req.params.id;
+    const { ADMIN_USER, ADMIN_PASS } = getAdminCredentials();
 
-    const ADMIN_USER = process.env.ADMIN_USER || "admin";
-    const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
+    if (!ADMIN_USER || !ADMIN_PASS) {
+        return res.status(500).json({ success: false, message: "Server admin credentials are not configured. Set ADMIN_USER and ADMIN_PASS in Render." });
+    }
 
     if (username !== ADMIN_USER || password !== ADMIN_PASS) {
         return res.status(401).json({ success: false, message: "Unauthorized Admin!" });
@@ -117,7 +128,7 @@ app.delete('/api/delete-note/:id', (req, res) => {
 
 // API: Gemini AI Chat Relay Endpoint
 app.post('/api/chat', async (req, res) => {
-    const apiKey = process.env.GEMINI_API_KEY || "AQ.Ab8RN6KTpX-r8OCBr4oUTcUaGQj8Ce6jAsSLBPhZGIFRRM_shA";
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     const model = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
     const userPrompt = req.body.prompt;
 
