@@ -260,25 +260,25 @@
 
         function handleAdminLogin(e) {
             e.preventDefault();
-            const user = document.getElementById('login-user').value;
-            const pass = document.getElementById('login-pass').value;
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value.trim();
 
-            if (user === "admin" && pass === "admin123") {
-                authenticatedAdmin = { user, pass };
-                alert("Admin login successful!");
-                
-                // Hide Login Button and Show Upload Button/Card
-                document.getElementById('admin-login-btn').classList.add('hidden');
-                document.getElementById('admin-upload-btn').classList.remove('hidden');
-                
-                const card = document.getElementById('admin-upload-card');
-                card.classList.remove('hidden');
-                card.classList.add('flex');
-
-                closeLoginModal();
-            } else {
-                alert("Invalid Admin Credentials!");
+            if (!user || !pass) {
+                alert("Please enter both username and password!");
+                return;
             }
+
+            authenticatedAdmin = { user, pass };
+            alert("Admin login successful!");
+
+            document.getElementById('admin-login-btn').classList.add('hidden');
+            document.getElementById('admin-upload-btn').classList.remove('hidden');
+
+            const card = document.getElementById('admin-upload-card');
+            card.classList.remove('hidden');
+            card.classList.add('flex');
+
+            closeLoginModal();
         }
 
         // --- NOTES & CHAT LOGIC ---
