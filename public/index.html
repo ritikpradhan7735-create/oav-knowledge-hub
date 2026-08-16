@@ -15,16 +15,27 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="style.css">
-</head>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Browser Tab Title -->
-    <title>OAV Bibina Knowledge & Games Hub</title>
-    
-    <!-- Browser Tab Favicon Logo -->
     <link rel="icon" type="image/png" href="logo.png">
+
+    <style>
+        /* Fixed Inline Sidebar Brand Logo Styling */
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .brand img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            border-radius: 6px;
+        }
+        .brand span {
+            font-size: 1.125rem;
+            font-weight: 800;
+            color: #ffffff;
+        }
+    </style>
 </head>
 
 <body class="bg-siteBg text-slate-100 font-sans min-h-screen flex flex-col md:flex-row antialiased">
@@ -32,17 +43,16 @@
     <aside id="sidebar" class="w-full md:w-64 bg-sidebarBg border-r border-slate-800/80 p-5 flex flex-col justify-between shrink-0">
         <div class="space-y-6">
             <div class="flex items-center justify-between">
-                 <!-- After -->
-<div class="brand">
-    <img src="logo.png" alt="Logo">
-    <span>Ritik Hub</span>
-</div>
-                        <div class="flex items-center gap-2">
-                            <button id="sidebar-toggle" onclick="toggleSidebar()" title="Collapse sidebar" class="text-slate-400 hover:text-white p-2 rounded-md hidden md:inline-flex">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 011-1h10a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4z"/><path d="M8 6h6v2H8V6z" fill="#0a0d14"/></svg>
-                            </button>
-                        </div>
-                    </div>
+                <div class="brand">
+                    <img src="logo.png" alt="RK Logo" onerror="this.onerror=null; this.src='https://via.placeholder.com/36?text=RK';">
+                    <span>Ritik Hub</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="sidebar-toggle" onclick="toggleSidebar()" title="Collapse sidebar" class="text-slate-400 hover:text-white p-2 rounded-md hidden md:inline-flex">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 011-1h10a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4z"/><path d="M8 6h6v2H8V6z" fill="#0a0d14"/></svg>
+                    </button>
+                </div>
+            </div>
 
             <nav class="space-y-4 text-xs font-semibold">
                 <div class="space-y-2">
@@ -61,7 +71,7 @@
 
         <div class="pt-6 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
             <button id="admin-login-btn" onclick="openLoginModal()" class="text-amber-400 hover:text-amber-300 font-bold">
-                <img src="logo.png" alt="RK" class="inline-block admin-logo" onerror="this.onerror=null; this.src='https://via.placeholder.com/20?text=RK';"> Admin Login
+                <img src="logo.png" alt="RK" class="inline-block w-4 h-4 mr-1" onerror="this.onerror=null; this.src='https://via.placeholder.com/20?text=RK';"> Admin Login
             </button>
 
             <button id="admin-upload-btn" onclick="openUploadModal()" class="text-emerald-400 hover:text-emerald-300 font-bold hidden">📂 Upload PDF Note</button>
@@ -112,7 +122,6 @@
             </div>
 
             <div id="main-cards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mt-12">
-                
                 <a href="https://r-pradhan.onrender.com" target="_blank" rel="noopener noreferrer" class="custom-card p-6 rounded-2xl flex flex-col justify-between h-48 cursor-pointer group">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-cyan-400 text-xl">♟️</div>
@@ -147,7 +156,6 @@
                     </div>
                     <span class="text-xs font-bold text-emerald-400 group-hover:text-emerald-300">Upload PDF ➔</span>
                 </div>
-
             </div>
 
             <div id="notes-display-section" class="max-w-4xl mx-auto mt-10 hidden space-y-4">
@@ -164,15 +172,16 @@
         </footer>
     </main>
 
+    <!-- Admin Login Modal -->
     <div id="admin-login-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-cardBg border border-slate-800 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
-                    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                        <div class="flex items-center gap-2">
-                            <img src="logo.png" alt="RK Logo" class="h-5 w-auto admin-logo" onerror="this.onerror=null; this.src='https://via.placeholder.com/20?text=RK';">
-                            <h3 class="font-bold text-sm text-white">Admin Login</h3>
-                        </div>
-                        <button onclick="closeLoginModal()" class="text-slate-400 hover:text-white">✕</button>
-                    </div>
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <div class="flex items-center gap-2">
+                    <img src="logo.png" alt="RK Logo" class="h-5 w-auto" onerror="this.onerror=null; this.src='https://via.placeholder.com/20?text=RK';">
+                    <h3 class="font-bold text-sm text-white">Admin Login</h3>
+                </div>
+                <button onclick="closeLoginModal()" class="text-slate-400 hover:text-white">✕</button>
+            </div>
             <form onsubmit="handleAdminLogin(event)" class="space-y-3 text-xs">
                 <div>
                     <label class="text-slate-400">Username</label>
@@ -187,6 +196,7 @@
         </div>
     </div>
 
+    <!-- Admin Upload Modal -->
     <div id="admin-upload-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-cardBg border border-slate-800 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-2">
@@ -220,6 +230,23 @@
         </div>
     </div>
 
+    <!-- Embedded In-Website PDF Viewer Modal -->
+    <div id="pdf-viewer-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4 hidden">
+        <div id="pdf-modal-container" class="bg-cardBg border border-slate-800 rounded-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center">
+                <h3 id="pdf-modal-title" class="font-bold text-sm text-white">View Note</h3>
+                <div class="flex items-center gap-2">
+                    <button onclick="togglePdfFullscreen()" class="text-slate-400 hover:text-white font-bold text-sm px-2" title="Fullscreen">⛶</button>
+                    <button onclick="closePdfModal()" class="text-slate-400 hover:text-white font-bold text-sm px-2">✕ Close</button>
+                </div>
+            </div>
+            <div class="flex-1 w-full bg-slate-950">
+                <iframe id="pdf-frame" src="" class="w-full h-full border-none"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Chatbot Widget -->
     <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end">
         <div id="study-buddy-box" class="w-80 md:w-96 bg-cardBg border border-slate-800 rounded-2xl shadow-2xl overflow-hidden mb-3 hidden flex-col">
             <div class="p-3.5 bg-slate-900 border-b border-slate-800 flex justify-between items-center">
@@ -239,43 +266,10 @@
     </div>
 
     <script>
-        async function deleteNote(noteId, cls, subject) {
-    if (!authenticatedAdmin) {
-        alert("Please log in as Admin first!");
-        return;
-    }
-
-    if (!confirm("Are you sure you want to delete this note permanently?")) return;
-
-    try {
-        const res = await fetch(`/api/delete-note/${noteId}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                username: authenticatedAdmin.user,
-                password: authenticatedAdmin.pass
-            })
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-            alert("Note deleted!");
-            // Remove from local memory array
-            allNotes = allNotes.filter(n => n.id !== noteId);
-            // Refresh current subject view
-            openSubjectNotes(cls, subject);
-        } else {
-            alert(data.message || "Failed to delete note.");
-        }
-    } catch (err) {
-        alert("Server error while deleting note.");
-    }
-}
         lucide.createIcons();
 
         let allNotes = [];
-        let authenticatedAdmin = null; // Stores login credentials after validation
+        let authenticatedAdmin = null;
 
         window.onload = function() {
             fetchNotes();
@@ -284,6 +278,80 @@
                 if (collapsed) document.getElementById('sidebar').classList.add('hidden');
             } catch (e) {}
         };
+
+        // --- PDF MODAL CONTROLS ---
+        function openPdfModal(url, title) {
+            const modal = document.getElementById('pdf-viewer-modal');
+            const iframe = document.getElementById('pdf-frame');
+            const titleEl = document.getElementById('pdf-modal-title');
+
+            titleEl.innerText = title || "View Note";
+            iframe.src = url;
+            modal.classList.remove('hidden');
+            
+            // Request fullscreen after a short delay to ensure modal is rendered
+            setTimeout(() => {
+                const container = document.getElementById('pdf-modal-container');
+                if (container && container.requestFullscreen) {
+                    container.requestFullscreen().catch(err => {
+                        console.log("Fullscreen request failed:", err);
+                    });
+                } else if (container && container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container && container.mozRequestFullScreen) {
+                    container.mozRequestFullScreen();
+                } else if (container && container.msRequestFullscreen) {
+                    container.msRequestFullscreen();
+                }
+            }, 300);
+        }
+
+        function togglePdfFullscreen() {
+            const container = document.getElementById('pdf-modal-container');
+            if (!document.fullscreenElement) {
+                if (container.requestFullscreen) {
+                    container.requestFullscreen().catch(err => {
+                        console.log("Fullscreen request failed:", err);
+                    });
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container.mozRequestFullScreen) {
+                    container.mozRequestFullScreen();
+                } else if (container.msRequestFullscreen) {
+                    container.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+
+        function closePdfModal() {
+            // Exit fullscreen if currently in fullscreen
+            if (document.fullscreenElement) {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+            
+            const modal = document.getElementById('pdf-viewer-modal');
+            const iframe = document.getElementById('pdf-frame');
+            iframe.src = '';
+            modal.classList.add('hidden');
+        }
 
         // --- AUTH & MODALS ---
         function openLoginModal() { document.getElementById('admin-login-modal').classList.remove('hidden'); }
@@ -315,19 +383,13 @@
             closeLoginModal();
         }
 
-        // --- NOTES & CHAT LOGIC ---
+        // --- NOTES API & RENDER ---
         async function fetchNotes() {
             try {
                 const res = await fetch('/api/notes');
                 const data = await res.json();
                 if (data.success) allNotes = data.notes;
             } catch (err) {}
-        }
-
-        function toggleChatWidget() {
-            const box = document.getElementById('study-buddy-box');
-            box.classList.toggle('hidden');
-            box.classList.toggle('flex');
         }
 
         function resetToHome() {
@@ -346,17 +408,14 @@
                         <span class="text-3xl font-extrabold text-cyan-400 group-hover:scale-110 block mb-1">IX</span>
                         <span class="text-xs text-slate-400 font-bold">Class 9th</span>
                     </button>
-
                     <button onclick="filterByClass('X')" class="custom-card p-6 rounded-2xl border border-slate-800 hover:border-cyan-400 text-center transition-all group">
                         <span class="text-3xl font-extrabold text-cyan-400 group-hover:scale-110 block mb-1">X</span>
                         <span class="text-xs text-slate-400 font-bold">Class 10th</span>
                     </button>
-
                     <button onclick="filterByClass('XI')" class="custom-card p-6 rounded-2xl border border-slate-800 hover:border-cyan-400 text-center transition-all group">
                         <span class="text-3xl font-extrabold text-cyan-400 group-hover:scale-110 block mb-1">XI</span>
                         <span class="text-xs text-slate-400 font-bold">Class 11th</span>
                     </button>
-
                     <button onclick="filterByClass('XII')" class="custom-card p-6 rounded-2xl border border-slate-800 hover:border-cyan-400 text-center transition-all group">
                         <span class="text-3xl font-extrabold text-cyan-400 group-hover:scale-110 block mb-1">XII</span>
                         <span class="text-xs text-slate-400 font-bold">Class 12th</span>
@@ -378,9 +437,7 @@
             if (classNotes.length === 0) {
                 container.innerHTML = `
                     <div class="col-span-full space-y-3">
-                        <button onclick="showClassSelection()" class="text-xs text-cyan-400 font-bold hover:underline">
-                            ← Back to Classes
-                        </button>
+                        <button onclick="showClassSelection()" class="text-xs text-cyan-400 font-bold hover:underline">← Back to Classes</button>
                         <div class="text-center py-8">
                             <p class="text-xs text-slate-500">No notes uploaded for Class ${cls} yet.</p>
                             ${authenticatedAdmin ? `<button onclick="openUploadModal()" class="mt-3 text-xs text-emerald-400 font-bold underline">+ Upload First Note</button>` : ''}
@@ -396,27 +453,20 @@
 
                 let htmlContent = `
                     <div class="col-span-full space-y-4">
-                        <button onclick="showClassSelection()" class="text-xs text-cyan-400 font-bold hover:underline mb-2">
-                            ← Back to Classes
-                        </button>
+                        <button onclick="showClassSelection()" class="text-xs text-cyan-400 font-bold hover:underline mb-2">← Back to Classes</button>
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 `;
 
                 for (const subject in groupedBySubject) {
                     const noteCount = groupedBySubject[subject].length;
                     htmlContent += `
-                        <button onclick="openSubjectNotes('${cls}', '${subject}')" 
-                                class="custom-card p-5 rounded-2xl border border-slate-800 hover:border-cyan-400 text-left transition-all flex flex-col justify-between h-32 group">
+                        <button onclick="openSubjectNotes('${cls}', '${subject}')" class="custom-card p-5 rounded-2xl border border-slate-800 hover:border-cyan-400 text-left transition-all flex flex-col justify-between h-32 group">
                             <div class="flex items-center justify-between">
                                 <span class="text-2xl">📁</span>
-                                <span class="text-[10px] bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded font-mono font-bold">
-                                    ${noteCount} Note(s)
-                                </span>
+                                <span class="text-[10px] bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded font-mono font-bold">${noteCount} Note(s)</span>
                             </div>
                             <div>
-                                <h4 class="font-bold text-white text-base group-hover:text-cyan-400 transition-colors">
-                                    ${subject}
-                                </h4>
+                                <h4 class="font-bold text-white text-base group-hover:text-cyan-400 transition-colors">${subject}</h4>
                                 <p class="text-[11px] text-slate-500">Click to view chapter list ➔</p>
                             </div>
                         </button>
@@ -430,58 +480,73 @@
             document.getElementById('main-cards-grid').classList.add('hidden');
             section.classList.remove('hidden');
         }
-function openSubjectNotes(cls, subject) {
-    const container = document.getElementById('notes-list-container');
-    document.getElementById('notes-class-title').innerText = `Class ${cls} ➔ ${subject}`;
 
-    const subjectNotes = allNotes.filter(n => n.class === cls && n.subject === subject);
+        function openSubjectNotes(cls, subject) {
+            const container = document.getElementById('notes-list-container');
+            document.getElementById('notes-class-title').innerText = `Class ${cls} ➔ ${subject}`;
 
-    let htmlContent = `
-        <div class="col-span-full space-y-4">
-            <button onclick="filterByClass('${cls}')" class="text-xs text-cyan-400 font-bold hover:underline flex items-center gap-1 mb-2">
-                ← Back to Subjects
-            </button>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    `;
+            const subjectNotes = allNotes.filter(n => n.class === cls && n.subject === subject);
 
-    subjectNotes.forEach((note, index) => {
-        htmlContent += `
-            <div class="custom-card p-4 rounded-xl space-y-2 border border-slate-800 relative group">
-                <div class="flex justify-between items-center">
-                    <span class="text-[10px] bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded font-bold font-mono">
-                        Chapter #${index + 1}
-                    </span>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[10px] text-slate-500">Class ${note.class}</span>
-                        ${authenticatedAdmin ? 
-                            `<button onclick="deleteNote('${note.id}', '${cls}', '${subject}')" class="text-red-400 hover:text-red-300 font-bold text-xs px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20" title="Delete Note">
-                                🗑️
-                             </button>` : ''
+            let htmlContent = `
+                <div class="col-span-full space-y-4">
+                    <button onclick="filterByClass('${cls}')" class="text-xs text-cyan-400 font-bold hover:underline flex items-center gap-1 mb-2">← Back to Subjects</button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            `;
+
+            subjectNotes.forEach((note, index) => {
+                const safeTitle = note.title.replace(/'/g, "\\'");
+                htmlContent += `
+                    <div class="custom-card p-4 rounded-xl space-y-2 border border-slate-800 relative group">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded font-bold font-mono">Chapter #${index + 1}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] text-slate-500">Class ${note.class}</span>
+                                ${authenticatedAdmin ? 
+                                    `<button onclick="deleteNote('${note.id}', '${cls}', '${subject}')" class="text-red-400 hover:text-red-300 font-bold text-xs px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20" title="Delete Note">🗑️</button>` : ''
+                                }
+                            </div>
+                        </div>
+                        <h4 class="font-bold text-white text-sm">${note.title}</h4>
+                        
+                        ${note.fileUrl ? 
+                            `<button onclick="openPdfModal('${note.fileUrl}', '${safeTitle}')" class="inline-flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 font-bold pt-1">📄 View PDF Inside Site ➔</button>` : 
+                            `<span class="text-xs text-slate-500 italic block pt-1">No File Attached</span>`
                         }
                     </div>
-                </div>
-                <h4 class="font-bold text-white text-sm">${note.title}</h4>
-                
-                ${note.fileUrl ? 
-                    `<a href="${note.fileUrl}" target="_blank" class="inline-flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 font-bold pt-1">
-                        📄 Open PDF Note ➔
-                     </a>` : 
-                    `<span class="text-xs text-slate-500 italic block pt-1">No File Attached</span>`
-                }
-            </div>
-        `;
-    });
+                `;
+            });
 
-    htmlContent += `</div></div>`;
-    container.innerHTML = htmlContent;
-}
+            htmlContent += `</div></div>`;
+            container.innerHTML = htmlContent;
+        }
+
+        async function deleteNote(noteId, cls, subject) {
+            if (!authenticatedAdmin) { alert("Please log in as Admin first!"); return; }
+            if (!confirm("Are you sure you want to delete this note permanently?")) return;
+
+            try {
+                const res = await fetch(`/api/delete-note/${noteId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: authenticatedAdmin.user, password: authenticatedAdmin.pass })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    alert("Note deleted!");
+                    allNotes = allNotes.filter(n => n.id !== noteId);
+                    openSubjectNotes(cls, subject);
+                } else {
+                    alert(data.message || "Failed to delete note.");
+                }
+            } catch (err) {
+                alert("Server error while deleting note.");
+            }
+        }
 
         async function handlePdfUploadSubmit(e) {
             e.preventDefault();
-            if (!authenticatedAdmin) {
-                alert("Please log in as Admin first!");
-                return;
-            }
+            if (!authenticatedAdmin) { alert("Please log in as Admin first!"); return; }
 
             const formData = new FormData();
             formData.append('username', authenticatedAdmin.user);
@@ -508,6 +573,12 @@ function openSubjectNotes(cls, subject) {
             }
         }
 
+        function toggleChatWidget() {
+            const box = document.getElementById('study-buddy-box');
+            box.classList.toggle('hidden');
+            box.classList.toggle('flex');
+        }
+
         async function handleChatSubmit(e) {
             e.preventDefault();
             const input = document.getElementById('chat-input');
@@ -532,7 +603,6 @@ function openSubjectNotes(cls, subject) {
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // Sidebar toggle: persist collapsed state
         function toggleSidebar() {
             const aside = document.getElementById('sidebar');
             const btn = document.getElementById('sidebar-toggle');
@@ -542,8 +612,6 @@ function openSubjectNotes(cls, subject) {
             try { localStorage.setItem('sidebarCollapsed', collapsed ? 'true' : 'false'); } catch(e) {}
             if (btn) btn.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
         }
-
-        // Removed gitAgain placeholder — top-right button now toggles the sidebar
     </script>
 </body>
 </html>
