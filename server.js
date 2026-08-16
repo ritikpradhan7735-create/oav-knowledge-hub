@@ -77,13 +77,18 @@ app.post('/api/upload-note', upload.single('pdf'), async (req, res) => {
             return res.status(400).json({ success: false, message: "No PDF file provided." });
         }
 
-        // Upload to Cloudinary
+        const safeTitle = String(title || 'study-note').trim().replace(/[^a-zA-Z0-9-_]+/g, '_').slice(0, 80) || 'study-note';
+
         const result = await cloudinary.uploader.upload(req.file.path, {
             resource_type: 'raw',
-            folder: 'pdf_notes'
+            folder: 'pdf_notes',
+            public_id: `${safeTitle}-${Date.now()}.pdf`,
+            use_filename: false,
+            unique_filename: false,
+            type: 'upload',
+            access_mode: 'public'
         });
 
-        // Clean up temporary local file
         if (fs.existsSync(req.file.path)) {
             fs.unlinkSync(req.file.path);
         }
