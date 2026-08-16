@@ -25,6 +25,7 @@ const upload = multer({ dest: 'uploads/' });
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Persistent Local Notes Storage (notes.json fallback)
 const notesFilePath = path.join(__dirname, 'notes.json');
@@ -62,7 +63,7 @@ app.get('/api/notes', (req, res) => {
     res.json({ success: true, notes: notesDatabase });
 });
 
-// API: Admin Upload Note to Cloudinary
+// API: Admin Upload Note to Cloudinary (or local fallback)
 app.post('/api/upload-note', upload.single('pdf'), async (req, res) => {
     try {
         const { username, password, classNum, subject, title } = req.body;
@@ -77,19 +78,39 @@ app.post('/api/upload-note', upload.single('pdf'), async (req, res) => {
             return res.status(400).json({ success: false, message: "No PDF file provided." });
         }
 
-        // Clean title for public_id
         const safeTitle = String(title || 'study-note').trim().replace(/[^a-zA-Z0-9-_]+/g, '_').slice(0, 50) || 'note';
+        let fileUrl;
 
-        // Upload to Cloudinary with simplified parameters
-        const result = await cloudinary.uploader.upload(req.file.path, {
-            resource_type: 'auto',
-            folder: 'pdf_notes',
-            public_id: `${safeTitle}_${Date.now()}`
-        });
+        // Check if Cloudinary credentials are valid
+        const hasValidCloudinaryCredentials = 
+            process.env.CLOUDINARY_API_KEY && 
+            process.env.CLOUDINARY_API_KEY !== 'YOUR_API_KEY' &&
+            process.env.CLOUDINARY_API_SECRET &&
+            process.env.CLOUDINARY_API_SECRET !== 'YOUR_API_SECRET';
 
-        // Delete temporary local file
-        if (fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
+        if (hasValidCloudinaryCredentials) {
+            // Upload to Cloudinary
+            try {
+                const result = await cloudinary.uploader.upload(req.file.path, {
+                    resource_type: 'auto',
+                    folder: 'pdf_notes',
+                    public_id: `${safeTitle}_${Date.now()}`
+                });
+                fileUrl = result.secure_url;
+                // Delete temporary local upload file
+                if (fs.existsSync(req.file.path)) {
+                    fs.unlinkSync(req.file.path);
+                }
+            } catch (cloudinaryErr) {
+                console.error("Cloudinary Upload Error:", cloudinaryErr);
+                throw cloudinaryErr;
+            }
+        } else {
+            // Fallback: save locally
+            const fileName = `${safeTitle}_${Date.now()}.pdf`;
+            const finalPath = path.join(__dirname, 'uploads', fileName);
+            fs.renameSync(req.file.path, finalPath);
+            fileUrl = `/uploads/${fileName}`;
         }
 
         const newNote = {
@@ -97,7 +118,7 @@ app.post('/api/upload-note', upload.single('pdf'), async (req, res) => {
             class: classNum,
             subject: subject,
             title: title,
-            fileUrl: result.secure_url
+            fileUrl: fileUrl
         };
 
         notesDatabase.unshift(newNote);
@@ -106,7 +127,7 @@ app.post('/api/upload-note', upload.single('pdf'), async (req, res) => {
         res.json({ success: true, note: newNote });
     } catch (err) {
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-        console.error("Cloudinary Error Detail:", err);
+        console.error("Upload Error:", err);
         res.status(500).json({ success: false, message: "Server error during upload." });
     }
 });
