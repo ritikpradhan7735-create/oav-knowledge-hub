@@ -77,18 +77,17 @@ app.post('/api/upload-note', upload.single('pdf'), async (req, res) => {
             return res.status(400).json({ success: false, message: "No PDF file provided." });
         }
 
-        const safeTitle = String(title || 'study-note').trim().replace(/[^a-zA-Z0-9-_]+/g, '_').slice(0, 80) || 'study-note';
+        // Clean title for public_id
+        const safeTitle = String(title || 'study-note').trim().replace(/[^a-zA-Z0-9-_]+/g, '_').slice(0, 50) || 'note';
 
+        // Upload to Cloudinary with simplified parameters
         const result = await cloudinary.uploader.upload(req.file.path, {
-            resource_type: 'raw',
+            resource_type: 'auto',
             folder: 'pdf_notes',
-            public_id: `${safeTitle}-${Date.now()}.pdf`,
-            use_filename: false,
-            unique_filename: false,
-            type: 'upload',
-            access_mode: 'public'
+            public_id: `${safeTitle}_${Date.now()}`
         });
 
+        // Delete temporary local file
         if (fs.existsSync(req.file.path)) {
             fs.unlinkSync(req.file.path);
         }
@@ -107,7 +106,7 @@ app.post('/api/upload-note', upload.single('pdf'), async (req, res) => {
         res.json({ success: true, note: newNote });
     } catch (err) {
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-        console.error("Upload Error:", err);
+        console.error("Cloudinary Error Detail:", err);
         res.status(500).json({ success: false, message: "Server error during upload." });
     }
 });
