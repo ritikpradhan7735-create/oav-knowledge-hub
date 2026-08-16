@@ -5,29 +5,28 @@ const path = require('path');
 const { Chess } = require('chess.js');
 const multer = require('multer');
 const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
 try { require('dotenv').config(); } catch (e) {}
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Ensure upload directory exists
-const uploadDir = path.join(__dirname, 'public', 'uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Multer Storage Configuration for PDF Uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadDir),
-    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname.replace(/\s+/g, '_'))
+// Configure Cloudinary for permanent storage
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'ymbcxm4f',
+  api_key: process.env.CLOUDINARY_API_KEY || 'YOUR_API_KEY',
+  api_secret: process.env.CLOUDINARY_API_SECRET || 'YOUR_API_SECRET'
 });
-const upload = multer({ storage });
 
-app.use(express.json());
+// Multer temporary local upload setup
+const upload = multer({ dest: 'uploads/' });
+
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Persistent Local Notes Storage (notes.json)
+// Persistent Local Notes Storage (notes.json fallback)
 const notesFilePath = path.join(__dirname, 'notes.json');
 
 function loadNotes() {
@@ -53,8 +52,8 @@ function saveNotes(notes) {
 let notesDatabase = loadNotes();
 
 function getAdminCredentials() {
-    const ADMIN_USER = String(process.env.ADMIN_USER || process.env.ADMIN_USERNAME || '').trim();
-    const ADMIN_PASS = String(process.env.ADMIN_PASS || process.env.ADMIN_PASSWORD || '').trim();
+    const ADMIN_USER = String(process.env.ADMIN_USER || process.env.ADMIN_USERNAME || 'admin').trim();
+    const ADMIN_PASS = String(process.env.ADMIN_PASS || process.env.ADMIN_PASSWORD || 'admin123').trim();
     return { ADMIN_USER, ADMIN_PASS };
 }
 
@@ -63,35 +62,49 @@ app.get('/api/notes', (req, res) => {
     res.json({ success: true, notes: notesDatabase });
 });
 
-// API: Admin Upload Note
-app.post('/api/upload-note', upload.single('pdf'), (req, res) => {
-    const { username, password, classNum, subject, title } = req.body;
-    const { ADMIN_USER, ADMIN_PASS } = getAdminCredentials();
+// API: Admin Upload Note to Cloudinary
+app.post('/api/upload-note', upload.single('pdf'), async (req, res) => {
+    try {
+        const { username, password, classNum, subject, title } = req.body;
+        const { ADMIN_USER, ADMIN_PASS } = getAdminCredentials();
 
-    if (!ADMIN_USER || !ADMIN_PASS) {
-        return res.status(500).json({ success: false, message: "Server admin credentials are not configured. Set ADMIN_USER and ADMIN_PASS in Render." });
+        if (username !== ADMIN_USER || password !== ADMIN_PASS) {
+            if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+            return res.status(401).json({ success: false, message: "Invalid Admin Credentials!" });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: "No PDF file provided." });
+        }
+
+        // Upload to Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path, {
+            resource_type: 'raw',
+            folder: 'pdf_notes'
+        });
+
+        // Clean up temporary local file
+        if (fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+
+        const newNote = {
+            id: 'note_' + Date.now(),
+            class: classNum,
+            subject: subject,
+            title: title,
+            fileUrl: result.secure_url
+        };
+
+        notesDatabase.unshift(newNote);
+        saveNotes(notesDatabase);
+
+        res.json({ success: true, note: newNote });
+    } catch (err) {
+        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        console.error("Upload Error:", err);
+        res.status(500).json({ success: false, message: "Server error during upload." });
     }
-
-    if (username !== ADMIN_USER || password !== ADMIN_PASS) {
-        return res.status(401).json({ success: false, message: "Invalid Admin Credentials!" });
-    }
-
-    if (!req.file) {
-        return res.status(400).json({ success: false, message: "No PDF file provided." });
-    }
-
-    const newNote = {
-        id: 'note_' + Date.now(),
-        class: classNum,
-        subject: subject,
-        title: title,
-        fileUrl: `/uploads/${req.file.filename}`
-    };
-
-    notesDatabase.unshift(newNote);
-    saveNotes(notesDatabase);
-
-    res.json({ success: true, note: newNote });
 });
 
 // API: Admin Delete Note
@@ -100,25 +113,13 @@ app.delete('/api/delete-note/:id', (req, res) => {
     const noteId = req.params.id;
     const { ADMIN_USER, ADMIN_PASS } = getAdminCredentials();
 
-    if (!ADMIN_USER || !ADMIN_PASS) {
-        return res.status(500).json({ success: false, message: "Server admin credentials are not configured. Set ADMIN_USER and ADMIN_PASS in Render." });
-    }
-
     if (username !== ADMIN_USER || password !== ADMIN_PASS) {
         return res.status(401).json({ success: false, message: "Unauthorized Admin!" });
     }
 
     const noteIndex = notesDatabase.findIndex(n => n.id === noteId);
     if (noteIndex !== -1) {
-        const deletedNote = notesDatabase.splice(noteIndex, 1)[0];
-
-        if (deletedNote.fileUrl) {
-            const filePath = path.join(__dirname, 'public', deletedNote.fileUrl);
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-            }
-        }
-
+        notesDatabase.splice(noteIndex, 1);
         saveNotes(notesDatabase);
         return res.json({ success: true, message: "Note deleted successfully!" });
     }
@@ -126,7 +127,7 @@ app.delete('/api/delete-note/:id', (req, res) => {
     res.status(404).json({ success: false, message: "Note not found." });
 });
 
-// API: Gemini AI Chat Relay Endpoint
+// API: Gemini AI Chat Endpoint
 app.post('/api/chat', async (req, res) => {
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     const model = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
@@ -143,41 +144,27 @@ app.post('/api/chat', async (req, res) => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                generationConfig: {
-                    temperature: 0.3,
-                    topP: 0.9,
-                    maxOutputTokens: 140
-                },
+                generationConfig: { temperature: 0.3, topP: 0.9, maxOutputTokens: 140 },
                 contents: [{
-                    parts: [{
-                        text: `System: You are Study Buddy, an encouraging AI tutor for CBSE Class 9 to 12 students. Answer clearly in 2-3 short sentences and avoid extra details.\nUser Question: ${userPrompt}`
-                    }]
+                    parts: [{ text: `System: You are Study Buddy, an encouraging AI tutor for CBSE Class 9 to 12 students. Answer clearly in 2-3 short sentences.\nUser Question: ${userPrompt}` }]
                 }]
             })
         });
 
         const data = await response.json();
-
-        if (data.error) {
-            console.error("Gemini API Error:", data.error);
-            return res.json({ success: false, reply: `API Error: ${data.error.message}` });
-        }
-
         const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (reply) {
             return res.json({ success: true, reply });
         } else {
-            return res.json({ success: false, reply: "No text response generated." });
+            return res.json({ success: false, reply: "No response generated." });
         }
-
     } catch (err) {
-        console.error("Server Fetch Error:", err);
         return res.status(500).json({ success: false, reply: "Failed to connect to AI server." });
     }
 });
 
-// SOCKET.IO CHESS LOBBY
+// Socket.io Chess Lobby logic
 let matches = [];
 
 function broadcastMatches() {
@@ -202,10 +189,8 @@ io.on('connection', (socket) => {
     socket.on('claim-seat', ({ matchId, color }) => {
         const match = matches.find(m => m.id === matchId);
         if (!match) return;
-
         if (color === 'w') match.p1Joined = true;
         if (color === 'b') match.p2Joined = true;
-
         socket.seatInfo = { matchId, color };
         broadcastMatches();
     });
@@ -244,5 +229,6 @@ io.on('connection', (socket) => {
     });
 });
 
+// Start listening
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
