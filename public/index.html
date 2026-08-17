@@ -40,8 +40,14 @@
 
 <body class="bg-siteBg text-slate-100 font-sans min-h-screen flex flex-col md:flex-row antialiased">
 
-    <aside id="sidebar" class="w-full md:w-64 bg-sidebarBg border-r border-slate-800/80 p-5 flex flex-col justify-between shrink-0">
-        <div class="space-y-6">
+    <button id="sidebar-trigger" type="button" class="sidebar-trigger" aria-label="Open sidebar" title="Open sidebar">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <aside id="sidebar" class="sidebar-panel" aria-expanded="false">
+        <div class="space-y-6 pb-6">
             <div class="flex items-center justify-between">
                 <div class="brand">
                     <img src="logo.png" alt="RK Logo" onerror="this.onerror=null; this.src='https://via.placeholder.com/36?text=RK';">
@@ -56,25 +62,24 @@
 
             <nav class="space-y-4 text-xs font-semibold">
                 <div class="space-y-2">
-                    <div class="text-slate-300 font-bold hover:text-white cursor-pointer" onclick="filterByClass('IX')">Class IX Notes</div>
-                    <div class="text-slate-300 font-bold hover:text-white cursor-pointer" onclick="filterByClass('X')">Class X Notes</div>
-                    <div class="text-slate-300 font-bold hover:text-white cursor-pointer" onclick="filterByClass('XI')">Class XI Notes</div>
-                    <div class="text-slate-300 font-bold hover:text-white cursor-pointer" onclick="filterByClass('XII')">Class XII Notes</div>
+                    <div class="text-slate-300 font-bold hover:text-white cursor-pointer text-sm" onclick="filterByClass('IX')">Class IX Notes</div>
+                    <div class="text-slate-300 font-bold hover:text-white cursor-pointer text-sm" onclick="filterByClass('X')">Class X Notes</div>
+                    <div class="text-slate-300 font-bold hover:text-white cursor-pointer text-sm" onclick="filterByClass('XI')">Class XI Notes</div>
+                    <div class="text-slate-300 font-bold hover:text-white cursor-pointer text-sm" onclick="filterByClass('XII')">Class XII Notes</div>
                 </div>
 
-                <div class="pt-4 border-t border-slate-800/80 space-y-2 text-[11px] text-slate-500 uppercase font-bold">
+                <div class="pt-4 border-t border-slate-800/80 space-y-3 text-[11px] text-slate-500 uppercase font-bold">
                     <div>Portals & Games</div>
-                    <a href="https://r-pradhan.onrender.com" target="_blank" rel="noopener noreferrer" class="block normal-case font-normal text-cyan-400 hover:text-cyan-300">♟️ Live Ritik K Chess ➔</a>
+                    <a href="https://r-pradhan.onrender.com" target="_blank" rel="noopener noreferrer" class="block normal-case font-normal text-cyan-400 hover:text-cyan-300 text-sm break-words">♟️ Live Ritik K Chess ➔</a>
+                    <button id="tourn-link" onclick="openTournamentModal()" class="block normal-case font-normal text-emerald-400 hover:text-emerald-300 text-left hidden text-sm break-words">🏆 Create Tournament ➔</button>
                 </div>
             </nav>
         </div>
 
-        <div class="pt-6 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-            <button id="admin-login-btn" onclick="openLoginModal()" class="text-amber-400 hover:text-amber-300 font-bold">
+        <div class="pt-6 border-t border-slate-800/80 space-y-3 mt-auto">
+            <button id="admin-login-btn" onclick="openLoginModal()" class="w-full text-amber-400 hover:text-amber-300 font-bold text-xs text-center py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg whitespace-normal">
                 <img src="logo.png" alt="RK" class="inline-block w-4 h-4 mr-1" onerror="this.onerror=null; this.src='https://via.placeholder.com/20?text=RK';"> Admin Login
             </button>
-
-            <button id="admin-upload-btn" onclick="openUploadModal()" class="text-emerald-400 hover:text-emerald-300 font-bold hidden">📂 Upload PDF Note</button>
         </div>
     </aside>
 
@@ -146,7 +151,7 @@
                     <span class="text-xs font-bold text-cyan-400 group-hover:text-cyan-300">Browse Notes ➔</span>
                 </div>
 
-                <div id="admin-upload-card" onclick="openUploadModal()" class="custom-card p-6 rounded-2xl flex-col justify-between h-48 cursor-pointer group hidden md:col-span-2">
+                <div id="admin-upload-card" onclick="openUploadModal()" class="custom-card p-6 rounded-2xl flex flex-col justify-between h-48 cursor-pointer group hidden">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-emerald-400 text-xl">📂</div>
                         <div>
@@ -155,6 +160,17 @@
                         </div>
                     </div>
                     <span class="text-xs font-bold text-emerald-400 group-hover:text-emerald-300">Upload PDF ➔</span>
+                </div>
+
+                <div id="admin-tournament-card" onclick="openTournamentModal()" class="custom-card p-6 rounded-2xl flex flex-col justify-between h-48 cursor-pointer group hidden">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-emerald-400 text-xl">🏆</div>
+                        <div>
+                            <h3 class="font-extrabold text-white text-lg">Chess Tournament</h3>
+                            <p class="text-[11px] text-slate-400">Create & Manage Tournaments</p>
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold text-emerald-400 group-hover:text-emerald-300">Create Tournament ➔</span>
                 </div>
             </div>
 
@@ -230,6 +246,33 @@
         </div>
     </div>
 
+    <!-- Admin Tournament Modal -->
+    <div id="admin-tournament-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-cardBg border border-slate-800 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="font-bold text-sm text-white">🏆 Create Chess Tournament</h3>
+                <button onclick="closeTournamentModal()" class="text-slate-400 hover:text-white">✕</button>
+            </div>
+            <form onsubmit="handleCreateTournament(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="text-slate-400 block mb-1">Tournament Name</label>
+                    <input type="text" id="tourn-name" required placeholder="e.g. Class X Chess Championship" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white">
+                </div>
+                <div>
+                    <label class="text-slate-400 block mb-1">Player Names (comma separated)</label>
+                    <input type="text" id="tourn-players" required placeholder="Ritik, Rahul, Amit, Suresh" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white">
+                </div>
+                <div>
+                    <label class="text-slate-400 block mb-1">Description / Rules</label>
+                    <input type="text" id="tourn-desc" placeholder="5-minute blitz matches" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white">
+                </div>
+                <button type="submit" class="w-full bg-emerald-400 text-slate-900 font-bold py-2 rounded-lg hover:bg-emerald-300">
+                    Send Tournament to Chess App ➔
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Embedded In-Website PDF Viewer Modal -->
     <div id="pdf-viewer-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4 hidden">
         <div id="pdf-modal-container" class="bg-cardBg border border-slate-800 rounded-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden shadow-2xl">
@@ -271,12 +314,45 @@
         let allNotes = [];
         let authenticatedAdmin = null;
 
+        const sidebar = document.getElementById('sidebar');
+        const sidebarTrigger = document.getElementById('sidebar-trigger');
+
+        function setSidebarOpen(open) {
+            if (!sidebar) return;
+            sidebar.classList.toggle('open', open);
+            sidebar.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (sidebarTrigger) {
+                sidebarTrigger.classList.toggle('hidden', open);
+            }
+            try {
+                localStorage.setItem('sidebarCollapsed', open ? 'false' : 'true');
+            } catch (e) {}
+        }
+
         window.onload = function() {
             fetchNotes();
             try {
                 const collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-                if (collapsed) document.getElementById('sidebar').classList.add('hidden');
-            } catch (e) {}
+                setSidebarOpen(!collapsed);
+            } catch (e) {
+                setSidebarOpen(false);
+            }
+
+            if (sidebarTrigger) {
+                sidebarTrigger.addEventListener('click', () => setSidebarOpen(true));
+            }
+
+            if (sidebar) {
+                sidebar.addEventListener('mouseleave', () => setSidebarOpen(false));
+            }
+
+            document.addEventListener('click', (event) => {
+                const clickedOnSidebar = sidebar && sidebar.contains(event.target);
+                const clickedOnTrigger = sidebarTrigger && sidebarTrigger.contains(event.target);
+                if (!clickedOnSidebar && !clickedOnTrigger) {
+                    setSidebarOpen(false);
+                }
+            });
         };
 
         // --- PDF MODAL CONTROLS ---
@@ -360,6 +436,16 @@
         function openUploadModal() { document.getElementById('admin-upload-modal').classList.remove('hidden'); }
         function closeUploadModal() { document.getElementById('admin-upload-modal').classList.add('hidden'); }
 
+        function openTournamentModal() {
+            if (!authenticatedAdmin) {
+                alert("Please log in as Admin first!");
+                openLoginModal();
+                return;
+            }
+            document.getElementById('admin-tournament-modal').classList.remove('hidden');
+        }
+        function closeTournamentModal() { document.getElementById('admin-tournament-modal').classList.add('hidden'); }
+
         function handleAdminLogin(e) {
             e.preventDefault();
             const user = document.getElementById('login-user').value.trim();
@@ -374,11 +460,17 @@
             alert("Admin login successful!");
 
             document.getElementById('admin-login-btn').classList.add('hidden');
-            document.getElementById('admin-upload-btn').classList.remove('hidden');
 
-            const card = document.getElementById('admin-upload-card');
-            card.classList.remove('hidden');
-            card.classList.add('flex');
+            const uploadCard = document.getElementById('admin-upload-card');
+            uploadCard.classList.remove('hidden');
+            uploadCard.classList.add('flex');
+
+            const tournCard = document.getElementById('admin-tournament-card');
+            tournCard.classList.remove('hidden');
+            tournCard.classList.add('flex');
+
+            const tournLink = document.getElementById('tourn-link');
+            tournLink.classList.remove('hidden');
 
             closeLoginModal();
         }
@@ -573,6 +665,59 @@
             }
         }
 
+        async function handleCreateTournament(e) {
+            e.preventDefault();
+
+            // Ensure Admin is logged in
+            if (!authenticatedAdmin) {
+                alert("Please log in as Admin first!");
+                return;
+            }
+
+            const name = document.getElementById('tourn-name').value.trim();
+            const rawPlayers = document.getElementById('tourn-players').value;
+            const description = document.getElementById('tourn-desc').value.trim();
+
+            // Split comma-separated names into an array
+            const players = rawPlayers.split(',').map(p => p.trim()).filter(Boolean);
+
+            if (players.length < 2) {
+                alert("Please enter at least 2 player names!");
+                return;
+            }
+
+            try {
+                // Send request to your Chess App's live Render backend
+                const response = await fetch('https://r-pradhan.onrender.com/api/tournaments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        organizer: authenticatedAdmin.user,
+                        description: description,
+                        players: players
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`🎉 Tournament "${data.tournament.name}" created successfully with ${data.matches.length} matches!`);
+                    // Clear form
+                    document.getElementById('tourn-name').value = '';
+                    document.getElementById('tourn-players').value = '';
+                    document.getElementById('tourn-desc').value = '';
+                } else {
+                    alert(data.message || 'Failed to create tournament.');
+                }
+            } catch (err) {
+                console.error("Tournament creation error:", err);
+                alert('Could not connect to the Chess App server. Make sure it is live on Render!');
+            }
+        }
+
         function toggleChatWidget() {
             const box = document.getElementById('study-buddy-box');
             box.classList.toggle('hidden');
@@ -607,10 +752,9 @@
             const aside = document.getElementById('sidebar');
             const btn = document.getElementById('sidebar-toggle');
             if (!aside) return;
-            aside.classList.toggle('hidden');
-            const collapsed = aside.classList.contains('hidden');
-            try { localStorage.setItem('sidebarCollapsed', collapsed ? 'true' : 'false'); } catch(e) {}
-            if (btn) btn.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+            const isOpen = aside.classList.contains('open');
+            setSidebarOpen(!isOpen);
+            if (btn) btn.title = isOpen ? 'Expand sidebar' : 'Collapse sidebar';
         }
     </script>
 </body>
