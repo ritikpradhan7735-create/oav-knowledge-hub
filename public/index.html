@@ -454,45 +454,43 @@
             document.getElementById('main-cards-grid').classList.add('hidden');
             section.classList.remove('hidden');
         }
+function openSubjectNotes(cls, subject) {
+    const container = document.getElementById('notes-list-container');
+    document.getElementById('notes-class-title').innerText = `Class ${cls} ➔ ${subject}`;
 
-        function openSubjectNotes(cls, subject) {
-            const container = document.getElementById('notes-list-container');
-            document.getElementById('notes-class-title').innerText = `Class ${cls} ➔ ${subject}`;
+    const subjectNotes = allNotes.filter(n => n.class === cls && n.subject === subject);
 
-            const subjectNotes = allNotes.filter(n => n.class === cls && n.subject === subject);
+    let htmlContent = `
+        <div class="col-span-full space-y-4">
+            <button onclick="filterByClass('${cls}')" class="text-xs text-cyan-400 font-bold hover:underline flex items-center gap-1 mb-2">← Back to Subjects</button>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    `;
 
-            let htmlContent = `
-                <div class="col-span-full space-y-4">
-                    <button onclick="filterByClass('${cls}')" class="text-xs text-cyan-400 font-bold hover:underline flex items-center gap-1 mb-2">← Back to Subjects</button>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            `;
-
-            subjectNotes.forEach((note, index) => {
-                const safeTitle = note.title.replace(/'/g, "\\'");
-                htmlContent += `
-                    <div class="custom-card p-4 rounded-xl space-y-2 border border-slate-800 relative group">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded font-bold font-mono">Chapter #${index + 1}</span>
-                            <div class="flex items-center gap-2">
-                                <span class="text-[10px] text-slate-500">Class ${note.class}</span>
-                                ${authenticatedAdmin ? 
-                                    `<button onclick="deleteNote('${note.id}', '${cls}', '${subject}')" class="text-red-400 hover:text-red-300 font-bold text-xs px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20" title="Delete Note">🗑️</button>` : ''
-                                }
-                            </div>
-                        </div>
-                        <h4 class="font-bold text-white text-sm">${note.title}</h4>
-                        
-                        ${note.fileUrl ? 
-                            `<button onclick="openPdfModal('${note.fileUrl}', '${safeTitle}')" class="inline-flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 font-bold pt-1">📄 View PDF Inside Site ➔</button>` : 
-                            `<span class="text-xs text-slate-500 italic block pt-1">No File Attached</span>`
+    subjectNotes.forEach((note, index) => {
+        htmlContent += `
+            <div class="custom-card p-4 rounded-xl space-y-2 border border-slate-800 relative group">
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded font-bold font-mono">Chapter #${index + 1}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] text-slate-500">Class ${note.class}</span>
+                        ${authenticatedAdmin ? 
+                            `<button onclick="deleteNote('${note.id}', '${cls}', '${subject}')" class="text-red-400 hover:text-red-300 font-bold text-xs px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20" title="Delete Note">🗑️</button>` : ''
                         }
                     </div>
-                `;
-            });
+                </div>
+                <h4 class="font-bold text-white text-sm">${note.title}</h4>
+                
+                ${note.fileUrl ? 
+                    `<a href="${note.fileUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 font-bold pt-1">📄 Open PDF in New Tab ➔</a>` : 
+                    `<span class="text-xs text-slate-500 italic block pt-1">No File Attached</span>`
+                }
+            </div>
+        `;
+    });
 
-            htmlContent += `</div></div>`;
-            container.innerHTML = htmlContent;
-        }
+    htmlContent += `</div></div>`;
+    container.innerHTML = htmlContent;
+}
 
         async function deleteNote(noteId, cls, subject) {
             if (!authenticatedAdmin) { alert("Please log in as Admin first!"); return; }
