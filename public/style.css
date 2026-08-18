@@ -247,3 +247,10 @@ body {
 .btn-primary { background: #38bdf8; color: #0a0d14; }
 .btn-secondary { background: #334155; color: #f8fafc; }
 .btn-warning { background: #f59e0b; color: #0a0d14; }
+/* Force solid background and full opacity for sidebar */
+#sidebar {
+    background-color: #0d1117 !important;
+    opacity: 1 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
