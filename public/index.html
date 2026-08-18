@@ -676,16 +676,19 @@
             }
         }
 
-        function openChessAppWithTournament(name, players, description) {
-            const chessAppUrl = 'https://r-pradhan.onrender.com';
-            const params = new URLSearchParams();
+        function getStoredTournaments() {
+            try {
+                const saved = localStorage.getItem('siteTournaments');
+                return saved ? JSON.parse(saved) : [];
+            } catch (e) {
+                return [];
+            }
+        }
 
-            if (name) params.set('tournamentName', name);
-            if (players && players.length) params.set('players', players.join(','));
-            if (description) params.set('description', description);
-
-            const finalUrl = params.toString() ? `${chessAppUrl}?${params.toString()}` : chessAppUrl;
-            window.open(finalUrl, '_blank', 'noopener,noreferrer');
+        function saveStoredTournaments(tournaments) {
+            try {
+                localStorage.setItem('siteTournaments', JSON.stringify(tournaments));
+            } catch (e) {}
         }
 
         async function handleCreateTournament(e) {
@@ -711,12 +714,24 @@
                 return;
             }
 
-            openChessAppWithTournament(name, players, description);
+            const tournament = {
+                id: 'tourn_' + Date.now(),
+                name,
+                organizer: authenticatedAdmin.user,
+                description,
+                players,
+                createdAt: new Date().toISOString()
+            };
+
+            const tournaments = getStoredTournaments();
+            tournaments.unshift(tournament);
+            saveStoredTournaments(tournaments);
+
             document.getElementById('tourn-name').value = '';
             document.getElementById('tourn-players').value = '';
             document.getElementById('tourn-desc').value = '';
             closeTournamentModal();
-            alert('Opening the Chess App in a new tab. Create and manage the tournament there.');
+            alert(`Tournament "${name}" saved in this website successfully.`);
         }
 
         function toggleChatWidget() {
