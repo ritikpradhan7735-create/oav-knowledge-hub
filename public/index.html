@@ -356,6 +356,17 @@
         };
 
         // --- PDF MODAL CONTROLS ---
+        function openPdfInNewTab(url, title) {
+            if (!url) return;
+            const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+            if (newWindow) {
+                newWindow.opener = null;
+            }
+            if (title) {
+                document.title = title;
+            }
+        }
+
         function openPdfModal(url, title) {
             const modal = document.getElementById('pdf-viewer-modal');
             const iframe = document.getElementById('pdf-frame');
@@ -601,7 +612,7 @@
                         <h4 class="font-bold text-white text-sm">${note.title}</h4>
                         
                         ${note.fileUrl ? 
-                            `<button onclick="openPdfModal('${note.fileUrl}', '${safeTitle}')" class="inline-flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 font-bold pt-1">📄 View PDF Inside Site ➔</button>` : 
+                            `<button onclick="openPdfInNewTab('${note.fileUrl}', '${safeTitle}')" class="inline-flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 font-bold pt-1">📄 Open PDF in New Tab ➔</button>` : 
                             `<span class="text-xs text-slate-500 italic block pt-1">No File Attached</span>`
                         }
                     </div>
