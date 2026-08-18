@@ -252,26 +252,6 @@
                 <button type="submit" class="w-full bg-cyan-400 text-slate-900 font-bold py-2 rounded-lg">Upload PDF Note</button>
             </form>
 
-            <!-- Chess Tournament Section -->
-            <form onsubmit="handleCreateTournament(event)" class="space-y-3 text-xs pt-4 border-t border-slate-800">
-                <h4 class="font-bold text-emerald-400 text-xs border-b border-slate-800 pb-1">🏆 Create Chess Tournament</h4>
-                <div>
-                    <label class="text-slate-400">Tournament Name</label>
-                    <input type="text" id="tourn-name" required placeholder="e.g. Sunday Blitz Championship" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white">
-                </div>
-                <div>
-                    <label class="text-slate-400">Player Names (comma separated)</label>
-                    <input type="text" id="tourn-players" required placeholder="Ritik, Rahul, Amit, Suresh" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white">
-                </div>
-                <div>
-                    <label class="text-slate-400">Description / Format</label>
-                    <input type="text" id="tourn-desc" placeholder="e.g. Single Elimination, 5 min matches" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white">
-                </div>
-                <button type="submit" class="w-full bg-emerald-400 text-slate-900 font-bold py-2 rounded-lg">Send Tournament to Chess App ➔</button>
-            </form>
-        </div>
-    </div>
-
     <!-- In-Website PDF Viewer Modal -->
     <div id="pdf-viewer-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4 hidden">
         <div class="bg-cardBg border border-slate-800 rounded-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden shadow-2xl">
