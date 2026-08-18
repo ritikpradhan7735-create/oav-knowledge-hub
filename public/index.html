@@ -34,23 +34,38 @@
             font-weight: 800;
             color: #ffffff;
         }
+
+        /* Smooth Sliding Left Sidebar Animation */
+        #sidebar {
+            transition: transform 0.3s ease-in-out;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 50;
+            transform: translateX(-100%); /* Hidden off-screen on the left */
+        }
+
+        /* Class added when sidebar is open */
+        #sidebar.sidebar-open {
+            transform: translateX(0); /* Slides into view */
+        }
     </style>
 </head>
 
 <body class="bg-siteBg text-slate-100 font-sans min-h-screen flex flex-col md:flex-row antialiased">
 
-    <aside id="sidebar" class="w-full md:w-64 bg-sidebarBg border-r border-slate-800/80 p-5 flex flex-col justify-between shrink-0">
+    <!-- Left Sliding Sidebar (Closes automatically when cursor leaves) -->
+    <aside id="sidebar" onmouseleave="closeSidebarOnLeave()" class="w-64 bg-sidebarBg border-r border-slate-800/80 p-5 flex flex-col justify-between shrink-0 shadow-2xl">
         <div class="space-y-6">
             <div class="flex items-center justify-between">
                 <div class="brand">
                     <img src="logo.png" alt="RK Logo" onerror="this.onerror=null; this.src='https://via.placeholder.com/36?text=RK';">
                     <span>Ritik Hub</span>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button id="sidebar-toggle" onclick="toggleSidebar()" title="Collapse sidebar" class="text-slate-400 hover:text-white p-2 rounded-md hidden md:inline-flex">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 011-1h10a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4z"/><path d="M8 6h6v2H8V6z" fill="#0a0d14"/></svg>
-                    </button>
-                </div>
+                <button onclick="toggleSidebar()" title="Close sidebar" class="text-slate-400 hover:text-white p-2 rounded-md font-bold">
+                    ✕
+                </button>
             </div>
 
             <nav class="space-y-4 text-xs font-semibold">
@@ -77,15 +92,21 @@
         </div>
     </aside>
 
-    <main class="flex-1 p-6 md:p-12 overflow-y-auto flex flex-col justify-between">
+    <main class="flex-1 p-6 md:p-12 overflow-y-auto flex flex-col justify-between w-full">
         <div>
+            <!-- Top Bar with Left 3-Line Button and Home Button -->
             <div class="flex justify-between items-center mb-6">
-                <button onclick="resetToHome()" class="px-3.5 py-1.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs text-cyan-400 font-bold rounded-xl flex items-center gap-1.5">
-                    <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
-                </button>
-                <div class="flex items-center gap-2">
-                    <button id="git-it-btn" onclick="toggleSidebar()" title="Toggle sidebar" class="icon-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect></svg>
+                <div class="flex items-center gap-3">
+                    <!-- 3-Line Hamburger Button on the LEFT -->
+                    <button id="hamburger-menu-btn" onclick="toggleSidebar()" title="Open sidebar" class="p-2 bg-slate-900 border border-slate-800 hover:border-cyan-400 rounded-xl text-slate-300 hover:text-white transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+
+                    <!-- Home Button -->
+                    <button onclick="resetToHome()" class="px-3.5 py-1.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs text-cyan-400 font-bold rounded-xl flex items-center gap-1.5">
+                        <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
                     </button>
                 </div>
             </div>
@@ -185,18 +206,18 @@
             <form onsubmit="handleAdminLogin(event)" class="space-y-3 text-xs">
                 <div>
                     <label class="text-slate-400">Username</label>
-                    <input type="text" id="login-user" required placeholder="Username" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white">
+                    <input type="text" id="login-user" required placeholder="admin" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white">
                 </div>
                 <div>
                     <label class="text-slate-400">Password</label>
-                    <input type="password" id="login-pass" required placeholder="password" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white">
+                    <input type="password" id="login-pass" required placeholder="admin123" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white">
                 </div>
                 <button type="submit" class="w-full bg-amber-400 text-slate-900 font-bold py-2 rounded-lg">Login as Admin</button>
             </form>
         </div>
     </div>
 
-    <!-- Combined Admin Portal Modal (Upload Note & Create Tournament) -->
+    <!-- Combined Admin Control Panel Modal -->
     <div id="admin-upload-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-cardBg border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-800 pb-2">
@@ -291,11 +312,22 @@
 
         window.onload = function() {
             fetchNotes();
-            try {
-                const collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-                if (collapsed) document.getElementById('sidebar').classList.add('hidden');
-            } catch (e) {}
         };
+
+        // --- SIDEBAR TOGGLE & AUTO-CLOSE ON MOUSE LEAVE ---
+        function toggleSidebar() {
+            const aside = document.getElementById('sidebar');
+            if (aside) {
+                aside.classList.toggle('sidebar-open');
+            }
+        }
+
+        function closeSidebarOnLeave() {
+            const aside = document.getElementById('sidebar');
+            if (aside) {
+                aside.classList.remove('sidebar-open');
+            }
+        }
 
         // --- PDF MODAL CONTROLS ---
         function openPdfModal(url, title) {
@@ -605,16 +637,6 @@
                 chatBox.innerHTML += `<div class="bg-slate-900 border border-slate-800 p-3 rounded-xl text-slate-300">Error connecting to AI.</div>`;
             }
             chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        function toggleSidebar() {
-            const aside = document.getElementById('sidebar');
-            const btn = document.getElementById('sidebar-toggle');
-            if (!aside) return;
-            aside.classList.toggle('hidden');
-            const collapsed = aside.classList.contains('hidden');
-            try { localStorage.setItem('sidebarCollapsed', collapsed ? 'true' : 'false'); } catch(e) {}
-            if (btn) btn.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
         }
     </script>
 </body>
