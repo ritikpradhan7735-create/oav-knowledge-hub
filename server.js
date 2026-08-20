@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const fs = require('fs');
 const { Chess } = require('chess.js');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
@@ -9,10 +10,7 @@ const cloudinary = require('cloudinary').v2;
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: {
-        origin: '*',
-        methods: ['GET', 'POST']
-    }
+    cors: { origin: '*', methods: ['GET', 'POST'] }
 });
 
 // Configure Cloudinary
@@ -22,7 +20,6 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Configure Multer for in-memory buffer storage
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(express.json({ limit: '10mb' }));
@@ -34,13 +31,25 @@ app.use((req, res, next) => {
     next();
 });
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
-// In-Memory State
-let notes = [];
 let matches = [];
-let tournaments = [];
 
-// --- CHESS BOT EVALUATION & MINIMAX LOGIC ---
+// Permanent Bot Match Setup
+const BOT_MATCH_ID = 'bot_match_nipun_permanent';
+const permanentBotMatch = {
+    id: BOT_MATCH_ID,
+    p1: 'Waiting...',
+    p2: '🤖 Nipun',
+    p1Joined: false,
+    p2Joined: true,
+    fen: 'start',
+    isBot: true,
+    gameInstance: new Chess()
+};
+matches.push(permanentBotMatch);
+
+// Piece Values & Positional Weights
 const PIECE_VALUES = { p: 10, n: 30, b: 35, r: 50, q: 90, k: 1000 };
 
 const PAWN_TABLE = [
@@ -87,50 +96,25 @@ function evaluateBoard(game) {
     return totalEvaluation;
 }
 
-function minimax(game, depth, alpha, beta, isMaximizing) {
-    if (depth === 0 || game.isGameOver()) {
-        return evaluateBoard(game);
-    }
-
+function getInstantBotMove(game) {
     const moves = game.moves({ verbose: true });
+    if (!moves.length) return null;
 
-    if (isMaximizing) {
-        let maxEval = -Infinity;
-        for (let move of moves) {
-            game.move(move);
-            let evaluation = minimax(game, depth - 1, alpha, beta, false);
-            game.undo();
-            maxEval = Math.max(maxEval, evaluation);
-            alpha = Math.max(alpha, evaluation);
-            if (beta <= alpha) break;
-        }
-        return maxEval;
-    } else {
-        let minEval = Infinity;
-        for (let move of moves) {
-            game.move(move);
-            let evaluation = minimax(game, depth - 1, alpha, beta, true);
-            game.undo();
-            minEval = Math.min(minEval, evaluation);
-            beta = Math.min(beta, evaluation);
-            if (beta <= alpha) break;
-        }
-        return minEval;
-    }
-}
-
-function getHardBotMove(game) {
-    const moves = game.moves({ verbose: true });
     let bestMove = null;
     let bestValue = Infinity;
 
-    for (let move of moves) {
+    for (let i = 0; i < moves.length; i++) {
+        const move = moves[i];
         game.move(move);
-        let boardValue = minimax(game, 3, -Infinity, Infinity, true);
+
+        let score = evaluateBoard(game);
+        if (game.in_checkmate()) score -= 5000;
+        else if (game.in_check()) score -= 15;
+
         game.undo();
 
-        if (boardValue < bestValue) {
-            bestValue = boardValue;
+        if (score < bestValue) {
+            bestValue = score;
             bestMove = move;
         }
     }
@@ -142,8 +126,8 @@ function makeBotMove(match) {
     if (!match.isBot || match.gameInstance.isGameOver()) return;
 
     if (match.gameInstance.turn() === 'b') {
-        setTimeout(() => {
-            const bestMove = getHardBotMove(match.gameInstance);
+        process.nextTick(() => {
+            const bestMove = getInstantBotMove(match.gameInstance);
             if (!bestMove) return;
 
             const moveResult = match.gameInstance.move(bestMove);
@@ -156,11 +140,10 @@ function makeBotMove(match) {
                     fen: match.fen
                 });
             }
-        }, 400);
+        });
     }
 }
 
-// Helpers
 function toPublicMatch(match) {
     return {
         id: match.id,
@@ -168,29 +151,9 @@ function toPublicMatch(match) {
         p2: match.p2,
         p1Joined: match.p1Joined,
         p2Joined: match.p2Joined,
-        tournamentId: match.tournamentId || null,
         isBot: match.isBot || false,
         fen: match.fen || 'start'
     };
-}
-
-function createMatchRecord({ p1, p2, tournamentId = null, isBot = false }) {
-    const gameInstance = new Chess();
-    const newMatch = {
-        id: 'match_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
-        p1,
-        p2: isBot ? '🤖 Grandmaster Bot (HARD)' : p2,
-        p1Joined: false,
-        p2Joined: isBot ? true : false,
-        fen: 'start',
-        tournamentId,
-        isBot,
-        gameInstance
-    };
-
-    matches.push(newMatch);
-    broadcastMatches();
-    return newMatch;
 }
 
 function broadcastMatches() {
@@ -203,7 +166,10 @@ function releaseSeat(socket) {
     const match = matches.find(m => m.id === matchId);
 
     if (match) {
-        if (color === 'w') match.p1Joined = false;
+        if (color === 'w') {
+            match.p1Joined = false;
+            if (match.isBot) match.p1 = 'Waiting...';
+        }
         if (color === 'b') match.p2Joined = false;
         broadcastMatches();
     }
@@ -219,7 +185,6 @@ function checkAdminAuth(reqBody) {
 }
 
 // --- API ROUTES ---
-
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', service: 'oav-hub-backend' });
 });
@@ -260,11 +225,37 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-// Permanent Cloudinary PDF Uploads
-app.get('/api/notes', (req, res) => {
-    res.json({ success: true, notes });
+// --- CLOUDINARY DIRECT NOTE STORAGE ---
+
+// 1. Fetch notes straight from Cloudinary
+app.get('/api/notes', async (req, res) => {
+    try {
+        const result = await cloudinary.search
+            .expression('resource_type:raw AND folder:oav_hub_pdf_notes')
+            .with_field('context')
+            .sort_by('created_at', 'desc')
+            .max_results(500)
+            .execute();
+
+        const notes = result.resources.map(file => {
+            const ctx = file.context || {};
+            return {
+                id: file.public_id,
+                class: ctx.classNum || 'IX',
+                subject: ctx.subject || 'General',
+                title: ctx.title || file.filename,
+                fileUrl: file.secure_url
+            };
+        });
+
+        res.json({ success: true, notes });
+    } catch (err) {
+        console.error('Error fetching notes from Cloudinary:', err);
+        res.json({ success: true, notes: [] });
+    }
 });
 
+// 2. Upload PDF directly to Cloudinary with metadata
 app.post('/api/upload-note', upload.single('pdf'), async (req, res) => {
     if (!checkAdminAuth(req.body)) {
         return res.status(401).json({ success: false, message: 'Invalid Admin Credentials!' });
@@ -280,7 +271,12 @@ app.post('/api/upload-note', upload.single('pdf'), async (req, res) => {
                 resource_type: 'raw',
                 folder: 'oav_hub_pdf_notes',
                 public_id: `note_${Date.now()}_${req.file.originalname.replace(/[^a-zA-Z0-9]/g, '_')}`,
-                format: 'pdf'
+                format: 'pdf',
+                context: {
+                    classNum: req.body.classNum,
+                    subject: req.body.subject,
+                    title: req.body.title
+                }
             },
             (error, result) => {
                 if (error) {
@@ -289,14 +285,13 @@ app.post('/api/upload-note', upload.single('pdf'), async (req, res) => {
                 }
 
                 const newNote = {
-                    id: 'note_' + Date.now(),
+                    id: result.public_id,
                     class: req.body.classNum,
                     subject: req.body.subject,
                     title: req.body.title,
                     fileUrl: result.secure_url
                 };
 
-                notes.unshift(newNote);
                 res.json({ success: true, note: newNote });
             }
         );
@@ -308,14 +303,21 @@ app.post('/api/upload-note', upload.single('pdf'), async (req, res) => {
     }
 });
 
-app.delete('/api/delete-note/:id', (req, res) => {
+// 3. Delete PDF permanently from Cloudinary
+app.delete('/api/delete-note/*', async (req, res) => {
     if (!checkAdminAuth(req.body)) {
         return res.status(401).json({ success: false, message: 'Invalid Admin Credentials!' });
     }
 
-    const noteId = req.params.id;
-    notes = notes.filter(n => n.id !== noteId);
-    res.json({ success: true, message: 'Note deleted successfully.' });
+    const publicId = req.params[0];
+
+    try {
+        await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+        res.json({ success: true, message: 'Note deleted permanently from Cloudinary.' });
+    } catch (err) {
+        console.error('Error deleting from Cloudinary:', err);
+        res.status(500).json({ success: false, message: 'Failed to delete note.' });
+    }
 });
 
 // Chess Endpoints
@@ -323,28 +325,34 @@ app.get('/api/matches', (req, res) => {
     res.json({ matches: matches.map(toPublicMatch) });
 });
 
-app.post('/api/bot-match', (req, res) => {
-    const { playerName } = req.body || {};
-    const match = createMatchRecord({
-        p1: playerName || 'Player',
-        p2: '🤖 Grandmaster Bot (HARD)',
-        isBot: true
-    });
-    res.status(201).json({ success: true, match: toPublicMatch(match) });
-});
-
-// --- SOCKET.IO EVENTS ---
+// Socket.IO Events
 io.on('connection', (socket) => {
     socket.emit('init-data', matches.map(toPublicMatch));
 
-    socket.on('claim-seat', ({ matchId, color }) => {
+    socket.on('claim-seat', ({ matchId, color, name }) => {
         const match = matches.find(m => m.id === matchId);
         if (!match) return;
 
-        if (color === 'w') match.p1Joined = true;
-        if (color === 'b') match.p2Joined = true;
+        const newName = name ? name.trim() : '';
 
-        socket.seatInfo = { matchId, color };
+        if (match.isBot) {
+            match.gameInstance.reset();
+            match.fen = 'start';
+            match.p1Joined = true;
+            match.p1 = newName || 'Player';
+        } else {
+            if (color === 'w') {
+                match.p1Joined = true;
+                match.p1 = newName || match.p1;
+            } else if (color === 'b') {
+                match.p2Joined = true;
+                match.p2 = newName || match.p2;
+            }
+        }
+
+        socket.seatInfo = { matchId, color: match.isBot ? 'w' : color };
+
+        io.to(matchId).emit('reset', { matchId: match.id, fen: match.fen });
         broadcastMatches();
     });
 
