@@ -266,11 +266,12 @@ app.post('/api/upload-note', upload.single('pdf'), async (req, res) => {
     }
 
     try {
-        const uploadStream = cloudinary.uploader.upload_stream(
+    const uploadStream = cloudinary.uploader.upload_stream(
             {
                 resource_type: 'raw',
                 folder: 'oav_hub_pdf_notes',
-                public_id: `note_${Date.now()}_${req.file.originalname.replace(/[^a-zA-Z0-9]/g, '_')}`,
+                // Unique random string prevents duplicate name errors on Cloudinary
+                public_id: `note_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
                 format: 'pdf',
                 context: {
                     classNum: req.body.classNum,
@@ -295,7 +296,6 @@ app.post('/api/upload-note', upload.single('pdf'), async (req, res) => {
                 res.json({ success: true, note: newNote });
             }
         );
-
         uploadStream.end(req.file.buffer);
     } catch (err) {
         console.error(err);
