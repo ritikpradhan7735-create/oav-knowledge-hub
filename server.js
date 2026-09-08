@@ -1,10 +1,19 @@
 const express = require('express');
+<<<<<<< HEAD
 const path = require('path');
 const fs = require('fs');
+=======
+const http = require('http');
+const { Server } = require('socket.io');
+const path = require('path');
+const fs = require('fs');
+const { Chess } = require('chess.js');
+>>>>>>> 730c3f78877ad1f229b34250d43801f1b0f7fc54
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 
 const app = express();
+<<<<<<< HEAD
 const PORT = process.env.PORT || 3000;
 const DATA = path.join(__dirname, 'notes.json');
 const UPLOADS = path.join(__dirname, 'uploads');
@@ -71,3 +80,398 @@ app.post('/api/chat', async (req,res) => {
 });
 app.get('*', (_,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 app.listen(PORT,()=>console.log(`OAV Hub running on ${PORT}`));
+=======
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: { origin: '*', methods: ['GET', 'POST'] }
+});
+
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const upload = multer({ storage: multer.memoryStorage() });
+
+app.use(express.json({ limit: '10mb' }));
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    if (req.method === 'OPTIONS') return res.sendStatus(204);
+    next();
+});
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
+
+let matches = [];
+
+// Permanent Bot Match Setup
+const BOT_MATCH_ID = 'bot_match_nipun_permanent';
+const permanentBotMatch = {
+    id: BOT_MATCH_ID,
+    p1: 'Waiting...',
+    p2: '🤖 Nipun',
+    p1Joined: false,
+    p2Joined: true,
+    fen: 'start',
+    isBot: true,
+    gameInstance: new Chess()
+};
+matches.push(permanentBotMatch);
+
+// Piece Values & Positional Weights
+const PIECE_VALUES = { p: 10, n: 30, b: 35, r: 50, q: 90, k: 1000 };
+
+const PAWN_TABLE = [
+    [0,  0,  0,  0,  0,  0,  0,  0],
+    [5,  5,  5,  5,  5,  5,  5,  5],
+    [1,  1,  2,  3,  3,  2,  1,  1],
+    [0,  0,  2,  5,  5,  2,  0,  0],
+    [0,  0,  0,  4,  4,  0,  0,  0],
+    [0, -1, -1,  2,  2, -1, -1,  0],
+    [0,  1,  1, -2, -2,  1,  1,  0],
+    [0,  0,  0,  0,  0,  0,  0,  0]
+];
+
+const KNIGHT_TABLE = [
+    [-5, -4, -3, -3, -3, -3, -4, -5],
+    [-4, -2,  0,  0,  0,  0, -2, -4],
+    [-3,  0,  3,  4,  4,  3,  0, -3],
+    [-3,  1,  4,  5,  5,  4,  1, -3],
+    [-3,  0,  4,  5,  5,  4,  0, -3],
+    [-3,  1,  3,  4,  4,  3,  1, -3],
+    [-4, -2,  0,  1,  1,  0, -2, -4],
+    [-5, -4, -3, -3, -3, -3, -4, -5]
+];
+
+function evaluateBoard(game) {
+    let totalEvaluation = 0;
+    const board = game.board();
+
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            const piece = board[r][c];
+            if (piece) {
+                const val = PIECE_VALUES[piece.type];
+                let posVal = 0;
+
+                if (piece.type === 'p') posVal = piece.color === 'w' ? PAWN_TABLE[r][c] : PAWN_TABLE[7 - r][c];
+                if (piece.type === 'n') posVal = piece.color === 'w' ? KNIGHT_TABLE[r][c] : KNIGHT_TABLE[7 - r][c];
+
+                const score = val + posVal;
+                totalEvaluation += (piece.color === 'w' ? score : -score);
+            }
+        }
+    }
+    return totalEvaluation;
+}
+
+function getInstantBotMove(game) {
+    const moves = game.moves({ verbose: true });
+    if (!moves.length) return null;
+
+    let bestMove = null;
+    let bestValue = Infinity;
+
+    for (let i = 0; i < moves.length; i++) {
+        const move = moves[i];
+        game.move(move);
+
+        let score = evaluateBoard(game);
+        if (game.in_checkmate()) score -= 5000;
+        else if (game.in_check()) score -= 15;
+
+        game.undo();
+
+        if (score < bestValue) {
+            bestValue = score;
+            bestMove = move;
+        }
+    }
+
+    return bestMove || moves[Math.floor(Math.random() * moves.length)];
+}
+
+function makeBotMove(match) {
+    if (!match.isBot || match.gameInstance.isGameOver()) return;
+
+    if (match.gameInstance.turn() === 'b') {
+        process.nextTick(() => {
+            const bestMove = getInstantBotMove(match.gameInstance);
+            if (!bestMove) return;
+
+            const moveResult = match.gameInstance.move(bestMove);
+
+            if (moveResult) {
+                match.fen = match.gameInstance.fen();
+                io.to(match.id).emit('move', {
+                    matchId: match.id,
+                    move: moveResult,
+                    fen: match.fen
+                });
+            }
+        });
+    }
+}
+
+function toPublicMatch(match) {
+    return {
+        id: match.id,
+        p1: match.p1,
+        p2: match.p2,
+        p1Joined: match.p1Joined,
+        p2Joined: match.p2Joined,
+        isBot: match.isBot || false,
+        fen: match.fen || 'start'
+    };
+}
+
+function broadcastMatches() {
+    io.emit('init-data', matches.map(toPublicMatch));
+}
+
+function releaseSeat(socket) {
+    if (!socket.seatInfo) return;
+    const { matchId, color } = socket.seatInfo;
+    const match = matches.find(m => m.id === matchId);
+
+    if (match) {
+        if (color === 'w') {
+            match.p1Joined = false;
+            if (match.isBot) match.p1 = 'Waiting...';
+        }
+        if (color === 'b') match.p2Joined = false;
+        broadcastMatches();
+    }
+    socket.seatInfo = null;
+}
+
+function checkAdminAuth(reqBody) {
+    const ADMIN_USER = process.env.ADMIN_USER || 'admin';
+    const ADMIN_PASS = process.env.ADMIN_PASS || 'admin123';
+    const user = reqBody.username || reqBody.user;
+    const pass = reqBody.password || reqBody.pass;
+    return user === ADMIN_USER && pass === ADMIN_PASS;
+}
+
+// --- API ROUTES ---
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', service: 'oav-hub-backend' });
+});
+
+// Gemini Study Buddy AI
+app.post('/api/chat', async (req, res) => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+    const userPrompt = req.body.prompt;
+
+    if (!userPrompt) {
+        return res.status(400).json({ success: false, reply: "Please enter a prompt." });
+    }
+
+    try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: `System: You are Study Buddy, a helpful AI tutor for CBSE Class 9 to 12 students. Answer clearly in concise terms.\nUser Question: ${userPrompt}` }]
+                }]
+            })
+        });
+
+        const data = await response.json();
+        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (reply) {
+            return res.json({ success: true, reply });
+        } else {
+            return res.json({ success: false, reply: "No response generated." });
+        }
+    } catch (err) {
+        return res.status(500).json({ success: false, reply: "Failed to connect to AI server." });
+    }
+});
+
+// --- CLOUDINARY DIRECT NOTE STORAGE ---
+
+// 1. Fetch notes straight from Cloudinary
+app.get('/api/notes', async (req, res) => {
+    try {
+        const result = await cloudinary.search
+            .expression('resource_type:raw AND folder:oav_hub_pdf_notes')
+            .with_field('context')
+            .sort_by('created_at', 'desc')
+            .max_results(500)
+            .execute();
+
+        const notes = result.resources.map(file => {
+            const ctx = file.context || {};
+            return {
+                id: file.public_id,
+                class: ctx.classNum || 'IX',
+                subject: ctx.subject || 'General',
+                title: ctx.title || file.filename,
+                fileUrl: file.secure_url
+            };
+        });
+
+        res.json({ success: true, notes });
+    } catch (err) {
+        console.error('Error fetching notes from Cloudinary:', err);
+        res.json({ success: true, notes: [] });
+    }
+});
+
+// 2. Upload PDF directly to Cloudinary with metadata
+app.post('/api/upload-note', upload.single('pdf'), async (req, res) => {
+    if (!checkAdminAuth(req.body)) {
+        return res.status(401).json({ success: false, message: 'Invalid Admin Credentials!' });
+    }
+
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No PDF file selected!' });
+    }
+
+    try {
+    const uploadStream = cloudinary.uploader.upload_stream(
+            {
+                resource_type: 'raw',
+                folder: 'oav_hub_pdf_notes',
+                // Unique random string prevents duplicate name errors on Cloudinary
+                public_id: `note_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+                format: 'pdf',
+                context: {
+                    classNum: req.body.classNum,
+                    subject: req.body.subject,
+                    title: req.body.title
+                }
+            },
+            (error, result) => {
+                if (error) {
+                    console.error('Cloudinary Upload Error:', error);
+                    return res.status(500).json({ success: false, message: 'Cloudinary upload failed.' });
+                }
+
+                const newNote = {
+                    id: result.public_id,
+                    class: req.body.classNum,
+                    subject: req.body.subject,
+                    title: req.body.title,
+                    fileUrl: result.secure_url
+                };
+
+                res.json({ success: true, note: newNote });
+            }
+        );
+        uploadStream.end(req.file.buffer);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error during PDF upload.' });
+    }
+});
+
+// 3. Delete PDF permanently from Cloudinary
+app.delete('/api/delete-note/*', async (req, res) => {
+    if (!checkAdminAuth(req.body)) {
+        return res.status(401).json({ success: false, message: 'Invalid Admin Credentials!' });
+    }
+
+    const publicId = req.params[0];
+
+    try {
+        await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+        res.json({ success: true, message: 'Note deleted permanently from Cloudinary.' });
+    } catch (err) {
+        console.error('Error deleting from Cloudinary:', err);
+        res.status(500).json({ success: false, message: 'Failed to delete note.' });
+    }
+});
+
+// Chess Endpoints
+app.get('/api/matches', (req, res) => {
+    res.json({ matches: matches.map(toPublicMatch) });
+});
+
+// Socket.IO Events
+io.on('connection', (socket) => {
+    socket.emit('init-data', matches.map(toPublicMatch));
+
+    socket.on('claim-seat', ({ matchId, color, name }) => {
+        const match = matches.find(m => m.id === matchId);
+        if (!match) return;
+
+        const newName = name ? name.trim() : '';
+
+        if (match.isBot) {
+            match.gameInstance.reset();
+            match.fen = 'start';
+            match.p1Joined = true;
+            match.p1 = newName || 'Player';
+        } else {
+            if (color === 'w') {
+                match.p1Joined = true;
+                match.p1 = newName || match.p1;
+            } else if (color === 'b') {
+                match.p2Joined = true;
+                match.p2 = newName || match.p2;
+            }
+        }
+
+        socket.seatInfo = { matchId, color: match.isBot ? 'w' : color };
+
+        io.to(matchId).emit('reset', { matchId: match.id, fen: match.fen });
+        broadcastMatches();
+    });
+
+    socket.on('join-match', (id) => {
+        socket.join(id);
+        const match = matches.find(m => m.id === id);
+        if (match) {
+            socket.emit('match-state', { matchId: id, fen: match.gameInstance.fen() });
+        }
+    });
+
+    socket.on('move', (data) => {
+        const match = matches.find(m => m.id === data.matchId);
+        if (!match) return;
+
+        try {
+            const moveResult = match.gameInstance.move({
+                from: data.move.from,
+                to: data.move.to,
+                promotion: data.move.promotion || 'q'
+            });
+
+            if (moveResult) {
+                match.fen = match.gameInstance.fen();
+                io.to(data.matchId).emit('move', {
+                    matchId: data.matchId,
+                    move: moveResult,
+                    fen: match.fen
+                });
+
+                if (match.isBot) {
+                    makeBotMove(match);
+                }
+            }
+        } catch (err) {
+            console.error('Illegal move caught:', err.message);
+        }
+    });
+
+    socket.on('disconnect', () => {
+        releaseSeat(socket);
+    });
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
+>>>>>>> 730c3f78877ad1f229b34250d43801f1b0f7fc54

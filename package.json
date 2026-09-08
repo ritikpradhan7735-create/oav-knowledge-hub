@@ -1,11 +1,18 @@
 {
+<<<<<<< HEAD
   "name": "oav-hub-modern",
   "version": "2.0.0",
   "description": "Modern OAV Hub student learning portal",
+=======
+  "name": "ritik-k-chess",
+  "version": "1.0.0",
+  "description": "Real-time Multiplayer Chess App",
+>>>>>>> 730c3f78877ad1f229b34250d43801f1b0f7fc54
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
+<<<<<<< HEAD
   "engines": {
     "node": ">=18"
   },
@@ -14,5 +21,14 @@
     "express": "^4.22.2",
     "lodash": "^4.18.1",
     "multer": "^2.2.0"
+=======
+  "dependencies": {
+    "@google/genai": "^2.16.0",
+    "chess.js": "^0.10.3",
+    "cloudinary": "^2.10.0",
+    "express": "^4.22.2",
+    "multer": "^2.2.0",
+    "socket.io": "^4.8.3"
+>>>>>>> 730c3f78877ad1f229b34250d43801f1b0f7fc54
   }
 }
