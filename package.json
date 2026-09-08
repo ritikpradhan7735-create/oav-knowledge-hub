@@ -1,0 +1,18 @@
+{
+  "name": "oav-hub-modern",
+  "version": "2.0.0",
+  "description": "Modern OAV Hub student learning portal",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cloudinary": "^2.10.0",
+    "express": "^4.22.2",
+    "lodash": "^4.18.1",
+    "multer": "^2.2.0"
+  }
+}
