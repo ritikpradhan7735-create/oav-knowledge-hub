@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <title>OAV Hub | Learn. Explore. Achieve.</title>
+
+  <link rel="icon" href="logo.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+
+  <a class="brand" href="index.html">
+    <img src="logo.png" alt="OAV Hub">
+    <span>OAV <b>Hub</b></span>
+  </a>
+
+  <nav id="nav">
+    <a data-page href="index.html">Home</a>
+    <a data-page href="notes.html">Notes</a>
+    <a data-page href="study-buddy.html">Study Buddy</a>
+    <a data-page href="about.html">About</a>
+
+    <button type="button" class="admin-link" id="adminBtn">
+      Admin
+    </button>
+  </nav>
+
+  <div class="nav-actions">
+    <button class="icon" id="theme" title="Theme">☼</button>
+    <button class="menu" id="menu">☰</button>
+  </div>
+
+</header>
+
+
+<main id="home">
+
+  <!-- HERO -->
+
+  <section class="hero">
+
+    <div class="hero-copy">
+
+      <span class="eyebrow">
+        ✦ DIGITAL LEARNING PORTAL
+      </span>
+
+      <h1>
+        Learn smarter.<br>
+        <em>Achieve more.</em>
+      </h1>
+
+      <p>
+        One modern hub for OAV students to discover study notes
+        and AI-powered learning help.
+      </p>
+
+      <div class="cta">
+
+        <a class="btn primary" href="notes.html">
+          Explore Notes <span>→</span>
+        </a>
+
+        <a class="btn secondary" href="study-buddy.html">
+          Ask Study Buddy
+        </a>
+
+      </div>
+
+      <div class="stats">
+
+        <div>
+          <b>IX–XII</b>
+          <span>Classes</span>
+        </div>
+
+        <div>
+          <b id="noteCount">0</b>
+          <span>Resources</span>
+        </div>
+
+        <div>
+          <b>24/7</b>
+          <span>Access</span>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="hero-panel">
+
+      <div class="orb one"></div>
+      <div class="orb two"></div>
+
+      <div class="mini-card top">
+
+        📚
+
+        <span>
+          Study resources<br>
+          <b>All in one place</b>
+        </span>
+
+      </div>
+
+
+      <div class="big-card">
+
+        <div class="badge">
+          TODAY'S FOCUS
+        </div>
+
+        <h3>
+          Make every study session count.
+        </h3>
+
+        <div class="progress">
+          <i></i>
+        </div>
+
+        <small>
+          Keep learning. Keep growing.
+        </small>
+
+      </div>
+
+
+      <div class="mini-card bottom">
+
+        ✦
+
+        <span>
+          Study Buddy AI<br>
+          <b>Ready to help</b>
+        </span>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- FEATURES -->
+
+  <section class="quick">
+
+    <article onclick="location.href='notes.html'">
+
+      <span>01</span>
+
+      <div>📖</div>
+
+      <h3>
+        Study Notes
+      </h3>
+
+      <p>
+        Class-wise learning resources and PDF materials.
+      </p>
+
+    </article>
+
+
+    <article onclick="location.href='study-buddy.html'">
+
+      <span>02</span>
+
+      <div>✦</div>
+
+      <h3>
+        Study Buddy
+      </h3>
+
+      <p>
+        Get AI-powered help when you are stuck.
+      </p>
+
+    </article>
+
+
+    <!-- CHESS GAME -->
+
+    <a
+      href="https://r-pradhan.onrender.com"
+      target="_blank"
+      rel="noopener"
+      class="feature-card"
+    >
+
+      <span>03</span>
+
+      <div class="feature-icon">
+        ♟
+      </div>
+
+      <h3>
+        Chess Game
+      </h3>
+
+      <p>
+        Play chess online on our dedicated Chess platform.
+      </p>
+
+    </a>
+
+
+    <article onclick="location.href='about.html'">
+
+      <span>04</span>
+
+      <div>ℹ</div>
+
+      <h3>
+        About OAV Hub
+      </h3>
+
+      <p>
+        Learn more about this digital learning platform.
+      </p>
+
+    </article>
+
+  </section>
+
+</main>
+
+
+<footer>
+
+  <div class="brand">
+
+    <img src="logo.png" alt="">
+
+    <span>
+      OAV <b>Hub</b>
+    </span>
+
+  </div>
+
+  <p>
+    Learn · Explore · Achieve
+  </p>
+
+  <small>
+    © <span id="year"></span> OAV Hub. Built for learning.
+  </small>
+
+</footer>
+
+
+<!-- ADMIN LOGIN MODAL -->
+
+<div class="modal" id="loginModal">
+
+  <div class="modal-box">
+
+    <button class="close" data-close="loginModal">
+      ×
+    </button>
+
+    <span class="eyebrow">
+      ADMIN ACCESS
+    </span>
+
+    <h2>
+      Sign in
+    </h2>
+
+    <form id="loginForm">
+
+      <input
+        id="user"
+        placeholder="Username"
+        required
+      >
+
+      <input
+        id="pass"
+        type="password"
+        placeholder="Password"
+        required
+      >
+
+      <button class="btn primary">
+        Continue →
+      </button>
+
+    </form>
+
+    <p class="hint">
+      Admin credentials are set securely using Render
+      environment variables.
+    </p>
+
+  </div>
+
+</div>
+
+
+<!-- ADMIN UPLOAD MODAL -->
+
+<div class="modal" id="uploadModal">
+
+  <div class="modal-box">
+
+    <button class="close" data-close="uploadModal">
+      ×
+    </button>
+
+    <span class="eyebrow">
+      ADMIN PORTAL
+    </span>
+
+    <h2>
+      Upload a resource
+    </h2>
+
+    <form id="uploadForm">
+
+      <select id="upClass">
+
+        <option>IX</option>
+        <option>X</option>
+        <option>XI</option>
+        <option>XII</option>
+
+      </select>
+
+      <input
+        id="upSubject"
+        placeholder="Subject (e.g. Science)"
+        required
+      >
+
+      <input
+        id="upTitle"
+        placeholder="Title / Chapter name"
+        required
+      >
+
+      <input
+        id="upFile"
+        type="file"
+        accept="application/pdf"
+        required
+      >
+
+      <button class="btn primary">
+        Upload PDF →
+      </button>
+
+    </form>
+
+    <button class="logout" id="logout">
+      Sign out
+    </button>
+
+  </div>
+
+</div>
+
+
+<script src="nav.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>

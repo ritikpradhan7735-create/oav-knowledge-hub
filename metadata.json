@@ -1,0 +1,8 @@
+{
+  "name": "OAV hub",
+  "description": "Odisha Adarsha Vidyalaya Knowledge & Games Hub for Class IX-XII CBSE study notes, AI study assistant, and live chess.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
