@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 require("dotenv").config();
+=======
+>>>>>>> c1cbadf3117cb8cc5b65ae51fb0018c0aebb836f
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -74,6 +77,7 @@ const writeLocal = (notes) => {
 };
 
 // -------------------- OAV HUB API --------------------
+<<<<<<< HEAD
 app.post('/api/admin/login', (req, res) => {
   if (!process.env.ADMIN_USER || !process.env.ADMIN_PASS) {
     return res.status(500).json({
@@ -92,6 +96,8 @@ app.post('/api/admin/login', (req, res) => {
   });
 });
 
+=======
+>>>>>>> c1cbadf3117cb8cc5b65ae51fb0018c0aebb836f
 
 app.get('/api/health', (req, res) => {
   res.json({
@@ -196,6 +202,7 @@ app.post('/api/upload-note', upload.single('pdf'), async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 // Open a PDF in the browser instead of forcing Cloudinary raw files to download.
 // The note id is passed in the query string because Cloudinary public IDs contain '/'.
 app.get('/api/view-note', async (req, res) => {
@@ -239,6 +246,9 @@ app.get('/api/view-note', async (req, res) => {
 // Delete a note from Cloudinary (or local storage). Query-string id safely supports
 // Cloudinary public IDs such as oav_hub_pdf_notes/note_12345_xxxxx.
 app.delete('/api/delete-note', async (req, res) => {
+=======
+app.delete('/api/delete-note/:id', async (req, res) => {
+>>>>>>> c1cbadf3117cb8cc5b65ae51fb0018c0aebb836f
   if (!adminOk(req.body)) {
     return res.status(401).json({
       success: false,
@@ -246,6 +256,7 @@ app.delete('/api/delete-note', async (req, res) => {
     });
   }
 
+<<<<<<< HEAD
   const id = String(req.query.id || '').trim();
   if (!id) return res.status(400).json({ success: false, message: 'Missing note id.' });
 
@@ -255,14 +266,27 @@ app.delete('/api/delete-note', async (req, res) => {
       if (result.result === 'not found') {
         console.warn('Cloudinary note not found:', id);
       }
+=======
+  const id = req.params.id;
+
+  try {
+    if (cloudReady()) {
+      await cloudinary.uploader
+        .destroy(id, { resource_type: 'raw' })
+        .catch(() => {});
+>>>>>>> c1cbadf3117cb8cc5b65ae51fb0018c0aebb836f
     }
 
     const notes = readLocal();
     const note = notes.find((n) => n.id === id);
 
     if (note?.fileUrl?.startsWith('/uploads/')) {
+<<<<<<< HEAD
       const filename = path.basename(note.fileUrl);
       const localFile = path.join(UPLOADS, filename);
+=======
+      const localFile = path.join(__dirname, note.fileUrl);
+>>>>>>> c1cbadf3117cb8cc5b65ae51fb0018c0aebb836f
       if (fs.existsSync(localFile)) fs.unlinkSync(localFile);
     }
 

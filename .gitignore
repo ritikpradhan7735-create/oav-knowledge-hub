@@ -15,4 +15,8 @@
 .cxx
 local.properties
 .env
+<<<<<<< HEAD
+=======
+node_modules/
+>>>>>>> c1cbadf3117cb8cc5b65ae51fb0018c0aebb836f
 debug.keystore

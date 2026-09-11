@@ -11,8 +11,12 @@
   },
   "dependencies": {
     "chess.js": "^1.4.0",
+<<<<<<< HEAD
     "cloudinary": "^2.11.0",
     "dotenv": "^17.4.2",
+=======
+    "cloudinary": "^2.10.0",
+>>>>>>> c1cbadf3117cb8cc5b65ae51fb0018c0aebb836f
     "express": "^4.22.2",
     "multer": "^2.2.0",
     "socket.io": "^4.8.3"
